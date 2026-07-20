@@ -1,0 +1,46 @@
+/* app/globals.css */
+@import "tailwindcss";
+
+@theme inline {
+/* colors */
+/* backgrounds */
+  --color-background: #fafafa;
+  --color-background-soft: #f5f0e8;
+  --color-background-muted: #e8e2d9;
+  --color-background-inverse: #0a0a0a;
+  --color-background-surface: #2a2825;
+  --color-background-footer: #050505;
+
+  /* foregrounds */
+  --color-foreground: #0a0a0a;
+  --color-foreground-muted: #9a9590;
+  --color-foreground-subtle: #c8b89a;
+  --color-foreground-inverse: #fafafa;
+  --color-foreground-dim: #2a2825;
+
+  /* accent */
+  --color-accent: #b8965a;
+  --color-accent-hover: #a89478;
+  --color-accent-light: #c8b89a;
+
+  /* elements */
+  --color-element: #0a0a0a;
+  --color-element-hover: #2a2825;
+  --color-element-border: #e8e2d9;
+  --color-element-card: #f5f0e8;
+  --color-element-surface: #1a1a1a;
+
+  /* status */
+  --color-status-danger: #c0392b;
+  --color-status-danger-soft: #e74c3c;
+  --color-status-success: #27ae60;
+
+  /* fonts */
+  --font-heading: var(--font-bebas);
+  --font-poppins: var(--font-poppins);
+}
+
+/* hide scrollbar */
+::-webkit-scrollbar {
+  display: none;
+}

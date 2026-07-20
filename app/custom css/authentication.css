@@ -1,0 +1,51 @@
+.cl-cardBox {
+  width: 35vw;
+  margin-top: 10%;
+  border-radius: 30px;
+  
+}
+.cl-card {
+  padding: 40px;
+}
+
+.cl-internal-1dauvpw {
+  display: none;
+}
+
+.cl-socialButtonsBlockButton {
+  padding-block: 15px;
+  border-radius: 25px;
+}
+
+.cl-headerTitle {
+  font-size: 35px;
+  font-family: cursive;
+  font-family: var(--font-bebas);
+}
+.cl-headerSubtitle {
+  font-size: 16px;
+  padding-top: 5px;
+}
+
+.cl-formFieldLabel {
+  font-size: 18px;
+  font-weight: 200;
+  font-family: var(--font-poppins);
+  color: var(--color-foreground-muted);
+}
+.cl-formFieldInput {
+  padding-block: 23px;
+  padding-inline: 18px;
+  font-size: 16px;
+  border-radius: 34px;
+}
+.cl-phoneInputBox {
+  border-radius: 34px;
+}
+
+.cl-formButtonPrimary {
+  padding-block: 14px;
+  border-radius: 24px;
+  font-size: 16px;
+  font-family: var(--font-poppins);
+}
