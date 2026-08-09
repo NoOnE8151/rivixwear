@@ -3,6 +3,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Navbar from "@/app/components/Navbar";
 import { use } from "react";
 import fetchProduct from "@/utils/shop/product/fetchProduct";
+import LoginRequired from "@/app/components/utils/LoginRequired";
+import { useAuth } from "@clerk/nextjs";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 
@@ -350,7 +352,15 @@ function Toast({ visible, message }) {
 }
 
 export default function ProductPage({ params }) {
+   const { isLoaded, isSignedIn, userId } = useAuth();
   const { productId } = use(params);
+
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
+
+  useEffect(() => {
+    console.log(showLoginRequired)
+  }, [showLoginRequired])
+
 
   const [product, setProduct] = useState({});
   useEffect(() => {
@@ -388,12 +398,35 @@ export default function ProductPage({ params }) {
     }, 180);
   };
 
-  const handleAddToBag = () => {
+  const handleAddToBag = async () => {
     if (!selectedSize) {
       setSizeShake(true);
-      setTimeout(() => setSizeShake(false), 400);
       return;
     }
+
+      if (!isSignedIn) {
+        setShowLoginRequired(true)
+      }
+
+      console.log('im the price', product)
+
+    const res = await fetch('/api/protected/user/cart/add', {
+      method: "POST",
+      headers: {
+        'Content-Type': 'aplication/json'
+      },
+      body: JSON.stringify({
+        productId: productId,
+        variantId: variant.id,
+        size: selectedSize,
+        price: variant.price
+      })
+    })
+
+    const r = await res.json();
+
+    console.log('add to cart api called', r)
+
     setBagCount((c) => c + 1);
     showToast("Added to Bag ✓");
   };
@@ -406,6 +439,9 @@ export default function ProductPage({ params }) {
     showToast("Redirecting to checkout...");
   };
 
+  if (!isLoaded) {
+    return <div> Loading </div>
+  }
   return (
     <>
       <style>{`
@@ -926,6 +962,8 @@ export default function ProductPage({ params }) {
       </div>
 
       <Toast visible={toast.visible} message={toast.message} />
+
+      {showLoginRequired && <LoginRequired setShowLoginRequired={setShowLoginRequired} />}
     </>
   );
 }

@@ -1,54 +1,31 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { X, Minus, Plus } from "lucide-react";
-
-const CART_ITEMS = [
-  {
-    id: "p1",
-    variantId: "v1",
-    name: "Oversized Bomber Jacket",
-    variant: "Charcoal Black",
-    size: "L",
-    price: 3499,
-    qty: 1,
-    image: "/assets/products/featured product/variant1.jpeg",
-  },
-  {
-    id: "p2",
-    variantId: "v2",
-    name: "Signature Cargo Pants",
-    variant: "Sand Beige",
-    size: "M",
-    price: 2799,
-    qty: 1,
-    image: "/assets/products/featured product/variant1.jpeg",
-  },
-];
 
 const Cart = ({ setIsCartOpen }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  const fetchCart = async () => {
-    console.log("fetch cart function called");
+const fetchCart = async () => {
+  try {
+    const res = await fetch("/api/protected/user/cart/get");
+    const r = await res.json();
 
-    try {
-      const res = await fetch("/api/protected/user/cart/get");
-      const r = await res.json();
-      setCartItems(r);
-      console.log(r);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    setCartItems(r.cart);
+    setItems(r.cart);
+    setSelected(new Set(r.cart.map(item => item.id)));
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   useEffect(() => {
     fetchCart();
   }, []);
 
-  const [items, setItems] = useState(CART_ITEMS);
+  const [items, setItems] = useState(cartItems);
   const [selected, setSelected] = useState(
-    () => new Set(CART_ITEMS.map((i) => i.id)),
+    () => new Set(cartItems.map((i) => i.id)),
   );
 
   const toggleSelect = (id) => {
@@ -59,13 +36,59 @@ const Cart = ({ setIsCartOpen }) => {
     });
   };
 
-  const updateQty = (id, delta) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item,
-      ),
+
+const debounceTimers = useRef({});
+
+const updateQty = (id, delta) => {
+  setItems((prev) => {
+    const updatedItems = prev.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            qty: Math.max(1, item.qty + delta),
+          }
+        : item,
     );
-  };
+
+    const updatedItem = updatedItems.find((item) => item.id === id);
+
+    if (!updatedItem) return updatedItems;
+
+    clearTimeout(debounceTimers.current[id]);
+
+    debounceTimers.current[id] = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          "/api/protected/user/cart/updateQuantity",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productId: updatedItem.id,
+              variantId: updatedItem.variantId,
+              size: updatedItem.size,
+              quantity: updatedItem.qty,
+            }),
+          },
+        );
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Failed to update quantity");
+        }
+      } catch (error) {
+        console.error("Cart quantity sync failed:", error);
+      } finally {
+        delete debounceTimers.current[id];
+      }
+    }, 500);
+
+    return updatedItems;
+  });
+};
 
   const removeItem = (id) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
