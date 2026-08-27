@@ -44,9 +44,9 @@ export default function HeroSection() {
         </h1>
 
         <div className="mt-8">
-          <button className="bg-element text-foreground-inverse px-6 py-3 md:w-1/3 font-semibold uppercase hover:bg-element-hover transition-colors duration-300">
+          <Link href={'/shop'} className="bg-element text-foreground-inverse px-6 py-3 md:w-1/3 font-semibold uppercase hover:bg-element-hover transition-colors duration-300">
             Shop Now
-          </button>
+          </Link>
         </div>
       </div>
 

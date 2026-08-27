@@ -406,6 +406,7 @@ export default function ProductPage({ params }) {
 
       if (!isSignedIn) {
         setShowLoginRequired(true)
+        return 
       }
 
       console.log('im the price', product)

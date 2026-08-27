@@ -2,7 +2,7 @@
 
 export default function BrandStorySection() {
   return (
-    <section className="grid md:grid-cols-2">
+    <section id="story" className="grid md:grid-cols-2">
 
       {/* Visual side */}
       <div className="relative overflow-hidden flex items-center justify-center bg-background-inverse min-h-150">
