@@ -6,18 +6,19 @@ import { X, Minus, Plus } from "lucide-react";
 const Cart = ({ setIsCartOpen }) => {
   const [cartItems, setCartItems] = useState([]);
 
-const fetchCart = async () => {
-  try {
-    const res = await fetch("/api/protected/user/cart/get");
-    const r = await res.json();
+  const fetchCart = async () => {
+    try {
+      const res = await fetch("/api/protected/user/cart/get");
+      const r = await res.json();
 
-    setCartItems(r.cart);
-    setItems(r.cart);
-    setSelected(new Set(r.cart.map(item => item.id)));
-  } catch (error) {
-    console.log(error);
-  }
-};
+      setCartItems(r.cart);
+      setItems(r.cart);
+      setSelected(new Set(r.cart.map((item) => item.id)));
+      console.log("successfully fetched all cart items");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     fetchCart();
@@ -36,31 +37,28 @@ const fetchCart = async () => {
     });
   };
 
+  const debounceTimers = useRef({});
 
-const debounceTimers = useRef({});
+  const updateQty = (id, delta) => {
+    setItems((prev) => {
+      const updatedItems = prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              qty: Math.max(1, item.qty + delta),
+            }
+          : item,
+      );
 
-const updateQty = (id, delta) => {
-  setItems((prev) => {
-    const updatedItems = prev.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            qty: Math.max(1, item.qty + delta),
-          }
-        : item,
-    );
+      const updatedItem = updatedItems.find((item) => item.id === id);
 
-    const updatedItem = updatedItems.find((item) => item.id === id);
+      if (!updatedItem) return updatedItems;
 
-    if (!updatedItem) return updatedItems;
+      clearTimeout(debounceTimers.current[id]);
 
-    clearTimeout(debounceTimers.current[id]);
-
-    debounceTimers.current[id] = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          "/api/protected/user/cart/updateQuantity",
-          {
+      debounceTimers.current[id] = setTimeout(async () => {
+        try {
+          const res = await fetch("/api/protected/user/cart/updateQuantity", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -71,32 +69,49 @@ const updateQty = (id, delta) => {
               size: updatedItem.size,
               quantity: updatedItem.qty,
             }),
-          },
-        );
+          });
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || "Failed to update quantity");
+          if (!res.ok || !data.success) {
+            throw new Error(data.message || "Failed to update quantity");
+          }
+        } catch (error) {
+          console.error("Cart quantity sync failed:", error);
+        } finally {
+          delete debounceTimers.current[id];
         }
-      } catch (error) {
-        console.error("Cart quantity sync failed:", error);
-      } finally {
-        delete debounceTimers.current[id];
-      }
-    }, 500);
+      }, 500);
 
-    return updatedItems;
-  });
-};
-
-  const removeItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
+      return updatedItems;
     });
+  };
+
+  const removeItem = async (id) => {
+    // deleting product from database
+    const res = await fetch("/api/protected/user/cart/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ productId: id }),
+    });
+
+    const r = await res.json();
+    console.log("succesfully deleted the selected produt", r);
+
+    if (!r.success) {
+      console.error("something went wrong");
+      return;
+    } else {
+      setItems((prev) => prev.filter((item) => item.id !== id));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      return r;
+    }
   };
 
   const selectedItems = useMemo(

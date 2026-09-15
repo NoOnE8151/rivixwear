@@ -409,8 +409,6 @@ export default function ProductPage({ params }) {
         return 
       }
 
-      console.log('im the price', product)
-
     const res = await fetch('/api/protected/user/cart/add', {
       method: "POST",
       headers: {
@@ -425,9 +423,6 @@ export default function ProductPage({ params }) {
     })
 
     const r = await res.json();
-
-    console.log('add to cart api called', r)
-
     setBagCount((c) => c + 1);
     showToast("Added to Bag ✓");
   };

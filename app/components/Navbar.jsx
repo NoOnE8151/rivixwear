@@ -6,12 +6,15 @@ import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import SearchInput from "./utils/SearchInput";
 import Cart from "./shop/Cart"
+import { useAuth } from "@clerk/nextjs";
+import LoginRequired from "./utils/LoginRequired";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { isSignedIn } = useUser();
   const [scrolled, setScrolled] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(pathname === '/' ? false : true)
+  const { isLoaded, isSignedIn } = useAuth();
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -62,9 +65,21 @@ export default function Navbar() {
       <div className="flex items-center justify-end gap-5 w-[25%]">
         <button onClick={() => setIsSearchActive((prev) => !prev)} className=" hidden md:inline text-[11px] cursor-pointer">{pathname === '/' && <Search />}</button>
           <Link href={isSignedIn ? '/sign-in' : '/sign-up'} className="nav-link hidden md:inline text-[11px]"><User /></Link>
-        <button onClick={() => { setIsCartOpen(true)}} className="cart-btn cursor-pointer"><ShoppingBag /></button>
+        <button
+  onClick={() => {
+
+    isSignedIn
+      ? setIsCartOpen(true)
+      : setShowLoginRequired(true);
+  }}
+  className="cart-btn cursor-pointer"
+>
+  <ShoppingBag />
+</button>
       </div>
       {isCartOpen && <Cart setIsCartOpen={setIsCartOpen} /> }
+
+      {showLoginRequired && <LoginRequired setShowLoginRequired={setShowLoginRequired} />}
     </nav>
   );
 }
