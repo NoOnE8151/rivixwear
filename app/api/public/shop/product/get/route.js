@@ -1,7 +1,6 @@
 import { connectDB } from "@/connections/connect db";
 import Product from "@/models/Product"
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 
 export async function POST(request) {
   try {

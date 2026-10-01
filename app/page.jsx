@@ -6,6 +6,7 @@ import WhyUsSection from "./sections/WhyUsSection";
 import BrandStorySection from "./sections/BrandStorySection";
 import FinalCTASection from "./sections/FinalCTASection";
 import Footer from "./sections/Footer";
+import { SignOutButton } from "@clerk/nextjs";
 
 export default function Home() {
   return (

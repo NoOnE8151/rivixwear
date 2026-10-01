@@ -130,14 +130,18 @@ const Cart = ({ setIsCartOpen }) => {
     setSelected(allSelected ? new Set() : new Set(items.map((i) => i.id)));
   };
 
-  const handleCheckout = () => {
-    const params = new URLSearchParams();
-    selectedItems.forEach((item) => {
-      params.append("productId", item.id);
-      params.append("variantId", item.variantId);
-    });
-    window.location.href = `/checkout?${params.toString()}`;
-  };
+const handleCheckout = () => {
+  const checkoutItems = selectedItems.map((item) => ({
+    productId: item.id,
+    variantId: item.variantId,
+  }));
+
+  const params = new URLSearchParams({
+    items: JSON.stringify(checkoutItems),
+  });
+
+  window.location.href = `/checkout?${params.toString()}`;
+};
 
   return (
     <div className="bg-background fixed right-0 top-0 bottom-0 w-[25%] flex flex-col shadow-2xl">
