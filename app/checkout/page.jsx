@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { Suspense } from "react";
 import {
   Mail,
   MapPin,
@@ -228,6 +229,7 @@ export default function Checkout() {
   };
 
   return (
+    <Suspense fallback={<div>Loading checkout...</div>}>
     <div className="min-h-screen bg-white text-neutral-950">
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       {/* Header */}
@@ -840,5 +842,6 @@ export default function Checkout() {
         N
       </button>
     </div>
+    </Suspense>
   );
 }
