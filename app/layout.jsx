@@ -4,6 +4,7 @@ import "./custom css/authentication.css"
 import "./custom css/utility animations.css"
 import { bebas, montserrat } from "./fonts/index";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "RIVIX — Define Your Direction",
@@ -20,6 +21,7 @@ export default function RootLayout({ children }) {
           {children}
         </body>
       </html>
+      <Analytics />
     </ClerkProvider>
   );
 }
