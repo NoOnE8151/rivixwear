@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Suspense } from "react";
 import {
@@ -74,7 +73,6 @@ function InputField({
 // Checkout page
 
 export default function Checkout() {
-  const params = useSearchParams();
 
   const items = React.useMemo(() => {
     try {
