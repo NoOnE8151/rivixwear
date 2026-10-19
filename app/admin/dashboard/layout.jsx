@@ -51,7 +51,7 @@ export default async function AdminDashboardLayout({ children }) {
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-element-border bg-background-soft lg:flex lg:flex-col">
+        <aside className="hidden w-64 shrink-0 border-r border-element-border bg-background lg:flex lg:flex-col">
           {/* Brand */}
           <div className="flex h-20 items-center border-b border-element-border px-6">
             <div>

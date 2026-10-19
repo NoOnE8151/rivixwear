@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import Navbar from "@/app/components/Navbar";
 import { use } from "react";
@@ -8,9 +9,13 @@ import { useAuth } from "@clerk/nextjs";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 
+// a variant is sold out only when its stock is a number below 1
+const isSoldOut = (variant) => Number(variant?.stock) < 1;
+
 function useToast() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const timerRef = useRef(null);
+
   const show = useCallback((message) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setToast({ visible: true, message });
@@ -19,15 +24,16 @@ function useToast() {
       2200,
     );
   }, []);
+
   return { toast, showToast: show };
 }
 
-function ProductImage({ src, color, variantName, fading }) {
+function ProductImage({ src, color, variantName, fading, soldOut }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden w-full h-full"
+      className="relative rounded-xl overflow-hidden w-full !h-[70vw] sm:!h-[65vw] md:!h-[600px] xl:!h-full"
       style={{ background: color }}
     >
       <div
@@ -76,9 +82,71 @@ function ProductImage({ src, color, variantName, fading }) {
           height: "100%",
           objectFit: "contain",
           opacity: loaded ? 1 : 0,
-          transition: "opacity 0.4s ease",
+          filter: soldOut ? "grayscale(1)" : "none",
+          transition: "opacity 0.4s ease, filter 0.4s ease",
         }}
       />
+
+      {/* SOLD OUT SCREEN */}
+      {soldOut && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 15,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 24,
+            background: "rgba(13,13,13,0.58)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+            color: "#ffffff",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 13,
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              padding: "6px 16px",
+              borderRadius: 100,
+              border: "1px solid rgba(255,255,255,0.6)",
+            }}
+          >
+            Sold Out
+          </span>
+
+          <div
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 34,
+              letterSpacing: "0.06em",
+              lineHeight: 1,
+              margin: "16px 0 8px",
+            }}
+          >
+            Currently Unavailable
+          </div>
+
+          <p
+            style={{
+              margin: 0,
+              maxWidth: 300,
+              fontSize: 13,
+              lineHeight: 1.7,
+              fontWeight: 300,
+              color: "rgba(255,255,255,0.8)",
+            }}
+          >
+            This colour has sold out. Fresh stock will be back soon — please
+            check back shortly.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -86,6 +154,7 @@ function ProductImage({ src, color, variantName, fading }) {
 function StockBar({ stock }) {
   const pct = Math.min(Math.round((stock / 30) * 100), 100);
   const isLow = stock <= 8;
+
   return (
     <div className="mb-7 mt-1">
       <div
@@ -99,6 +168,7 @@ function StockBar({ stock }) {
         <span style={{ color: "#6b6560" }}>Stock level</span>
         <strong style={{ color: "#0d0d0d" }}>{stock} left</strong>
       </div>
+
       <div
         style={{
           height: 3,
@@ -121,8 +191,42 @@ function StockBar({ stock }) {
   );
 }
 
+function SoldOutNotice() {
+  return (
+    <div
+      className="mb-7 mt-1"
+      style={{
+        padding: "12px 14px",
+        borderRadius: 8,
+        background: "rgba(13,13,13,0.04)",
+        border: "1px solid rgba(13,13,13,0.12)",
+        fontSize: 12,
+        lineHeight: 1.6,
+        letterSpacing: "0.03em",
+        color: "#6b6560",
+      }}
+    >
+      <strong
+        style={{
+          display: "block",
+          color: "#0d0d0d",
+          fontSize: 11,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          marginBottom: 2,
+        }}
+      >
+        Sold out
+      </strong>
+      This colour is currently unavailable. Stock will be back soon — explore
+      the other colours in the meantime.
+    </div>
+  );
+}
+
 function LowStockAlert({ stock }) {
-  if (stock > 8) return null;
+  if (!(stock >= 1 && stock <= 8)) return null;
+
   return (
     <div
       className="flex items-center gap-2 mb-5"
@@ -156,6 +260,8 @@ function VariantPills({ variants, selectedIdx, onSelect }) {
     <div className="flex flex-wrap gap-2.5 mb-7">
       {variants?.map((v, i) => {
         const active = i === selectedIdx;
+        const soldOut = isSoldOut(v);
+
         return (
           <button
             key={v?.name}
@@ -200,9 +306,22 @@ function VariantPills({ variants, selectedIdx, onSelect }) {
                   ? "1px solid rgba(255,255,255,0.25)"
                   : "1px solid rgba(0,0,0,0.08)",
                 flexShrink: 0,
+                opacity: soldOut ? 0.45 : 1,
               }}
             />
             {v.name}
+            {soldOut && (
+              <span
+                style={{
+                  fontSize: 9,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  opacity: 0.65,
+                }}
+              >
+                Sold out
+              </span>
+            )}
           </button>
         );
       })}
@@ -216,6 +335,7 @@ function SizeGrid({ allSizes, availableSizes, selectedSize, onSelect }) {
       {allSizes.map((s, i) => {
         const available = availableSizes?.includes(s);
         const selected = s === selectedSize;
+
         return (
           <button
             key={i}
@@ -266,6 +386,7 @@ function SizeGrid({ allSizes, availableSizes, selectedSize, onSelect }) {
 function Accordion({ title, children }) {
   const [open, setOpen] = useState(false);
   const bodyRef = useRef(null);
+
   return (
     <div style={{ borderBottom: "1px solid rgba(13,13,13,0.12)" }}>
       <button
@@ -300,6 +421,7 @@ function Accordion({ title, children }) {
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
+
       <div
         ref={bodyRef}
         style={{
@@ -352,17 +474,17 @@ function Toast({ visible, message }) {
 }
 
 export default function ProductPage({ params }) {
-   const { isLoaded, isSignedIn, userId } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { productId } = use(params);
 
   const [showLoginRequired, setShowLoginRequired] = useState(false);
 
   useEffect(() => {
-    console.log(showLoginRequired)
-  }, [showLoginRequired])
-
+    console.log(showLoginRequired);
+  }, [showLoginRequired]);
 
   const [product, setProduct] = useState({});
+
   useEffect(() => {
     fetchProduct(productId)
       .then((products) => {
@@ -382,72 +504,91 @@ export default function ProductPage({ params }) {
   const [fading, setFading] = useState(false);
   const [bagCount, setBagCount] = useState(0);
   const [sizeShake, setSizeShake] = useState(false);
+
   const { toast, showToast } = useToast();
 
   const variant = product?.variants?.[variantIdx];
+  const soldOut = isSoldOut(variant);
 
   const switchVariant = (idx) => {
     if (idx === variantIdx) return;
+
     setFading(true);
+
     setTimeout(() => {
       setVariantIdx(idx);
-      setSelectedSize((prev) =>
-        prev && !product?.variants[idx]?.sizes?.includes(prev) ? null : prev,
-      );
+
+      setSelectedSize((prev) => {
+        const next = product?.variants?.[idx];
+        if (!prev) return prev;
+        if (isSoldOut(next) || !next?.sizes?.includes(prev)) return null;
+        return prev;
+      });
+
       setFading(false);
     }, 180);
   };
 
   const handleAddToBag = async () => {
+    if (soldOut) return;
+
     if (!selectedSize) {
       setSizeShake(true);
       return;
     }
 
-      if (!isSignedIn) {
-        setShowLoginRequired(true)
-        return 
-      }
+    if (!isSignedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
 
-    const res = await fetch('/api/protected/user/cart/add', {
+    const res = await fetch("/api/protected/user/cart/add", {
       method: "POST",
       headers: {
-        'Content-Type': 'aplication/json'
+        "Content-Type": "aplication/json",
       },
       body: JSON.stringify({
         productId: productId,
         variantId: variant.id,
         size: selectedSize,
-        price: variant.price
-      })
-    })
+        price: variant.price,
+      }),
+    });
 
     const r = await res.json();
+
     setBagCount((c) => c + 1);
     showToast("Added to Bag ✓");
   };
 
-  const handleBuyNow = () => {
-    if (!selectedSize) {
-      handleAddToBag();
-      return;
-    }
+  const handleBuyNow = async () => {
+    if (soldOut) return;
+
+    await handleAddToBag();
     showToast("Redirecting to checkout...");
+    setTimeout(() => {
+      window.location.href = "/checkout";
+    }, 300);
   };
 
   if (!isLoaded) {
-    return <div> Loading </div>
+    return <div> Loading </div>;
   }
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
         * { box-sizing: border-box; }
+
         body { background: #ffffff; margin: 0; }
+
         @keyframes rivix-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(0.75); }
         }
+
         @keyframes rivix-shake {
           0%, 100% { transform: translateX(0); }
           20% { transform: translateX(-6px); }
@@ -455,7 +596,9 @@ export default function ProductPage({ params }) {
           60% { transform: translateX(-4px); }
           80% { transform: translateX(4px); }
         }
+
         .rivix-shake { animation: rivix-shake 0.35s ease; }
+
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
@@ -469,13 +612,11 @@ export default function ProductPage({ params }) {
       >
         {/* DELIVERY STRIP */}
         <div
+          className="w-full px-4 sm:px-6 xl:px-12 bg-background text-foreground hidden md:flex justify-center items-center"
           style={{
             background: "#0d0d0d",
             color: "#ffffff",
             padding: "12px 48px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             gap: 32,
             fontSize: 10,
             letterSpacing: "0.14em",
@@ -498,6 +639,7 @@ export default function ProductPage({ params }) {
 
         {/* BREADCRUMB */}
         <div
+          className="w-full px-4 sm:px-6 xl:px-12"
           style={{
             padding: "16px 48px",
             display: "flex",
@@ -536,6 +678,7 @@ export default function ProductPage({ params }) {
 
         {/* MAIN LAYOUT */}
         <div
+          className="w-full !grid-cols-1 !px-4 sm:!px-6 xl:!grid-cols-[minmax(0,1fr)_480px] xl:!px-12"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 480px",
@@ -546,6 +689,7 @@ export default function ProductPage({ params }) {
         >
           {/* GALLERY */}
           <div
+            className="!relative !h-auto !grid-cols-1 !grid-rows-[auto_minmax(0,1fr)] !gap-3 !p-0 xl:!sticky xl:!h-screen xl:!grid-cols-[72px_1fr] xl:!grid-rows-none xl:!gap-4 xl:!p-[32px_40px_32px_0]"
             style={{
               position: "sticky",
               top: 0,
@@ -557,6 +701,7 @@ export default function ProductPage({ params }) {
             }}
           >
             <div
+              className="!flex-row !overflow-x-auto !overflow-y-hidden xl:!flex-col xl:!overflow-y-auto xl:!overflow-x-visible"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -593,16 +738,19 @@ export default function ProductPage({ params }) {
                 </div>
               ))}
             </div>
+
             <ProductImage
               src={variant?.images[0]}
               color={variant?.color}
               variantName={variant?.name}
               fading={fading}
+              soldOut={soldOut}
             />
           </div>
 
           {/* INFO */}
           <div
+            className="!border-l-0 !p-0 sm:!px-2 xl:!border-l xl:!p-[40px_0_40px_48px]"
             style={{
               padding: "40px 0 40px 48px",
               borderLeft: "1px solid rgba(13,13,13,0.12)",
@@ -637,6 +785,7 @@ export default function ProductPage({ params }) {
 
             {/* Price */}
             <div
+              className="!flex-wrap sm:!flex-nowrap"
               style={{
                 display: "flex",
                 alignItems: "baseline",
@@ -653,6 +802,7 @@ export default function ProductPage({ params }) {
               >
                 ₹{variant?.price}
               </span>
+
               <span
                 style={{
                   fontSize: 14,
@@ -662,6 +812,7 @@ export default function ProductPage({ params }) {
               >
                 ₹1,199
               </span>
+
               <span
                 style={{
                   fontSize: 11,
@@ -677,7 +828,7 @@ export default function ProductPage({ params }) {
               </span>
             </div>
 
-            <StockBar stock={variant?.stock} />
+            {soldOut ? <SoldOutNotice /> : <StockBar stock={variant?.stock} />}
 
             <div
               style={{
@@ -703,6 +854,7 @@ export default function ProductPage({ params }) {
                   {variant?.name}
                 </span>
               </div>
+
               <VariantPills
                 variants={product?.variants}
                 selectedIdx={variantIdx}
@@ -730,6 +882,7 @@ export default function ProductPage({ params }) {
                     {selectedSize || "Select size"}
                   </span>
                 </span>
+
                 <button
                   onClick={() => alert("Size guide coming soon!")}
                   style={{
@@ -748,10 +901,11 @@ export default function ProductPage({ params }) {
                   Size guide
                 </button>
               </div>
+
               <div className={sizeShake ? "rivix-shake" : ""}>
                 <SizeGrid
                   allSizes={ALL_SIZES}
-                  availableSizes={variant?.sizes}
+                  availableSizes={soldOut ? [] : variant?.sizes}
                   selectedSize={selectedSize}
                   onSelect={setSelectedSize}
                 />
@@ -769,84 +923,111 @@ export default function ProductPage({ params }) {
                 marginBottom: 24,
               }}
             >
-              <button
-                onClick={handleAddToBag}
-                style={{
-                  width: "100%",
-                  padding: "18px 24px",
-                  borderRadius: 10,
-                  border: "1.5px solid #0d0d0d",
-                  background: "transparent",
-                  color: "#0d0d0d",
-                  fontSize: 12,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  fontFamily: "inherit",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  transition: "all 0.22s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(13,13,13,0.06)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 6px 24px rgba(13,13,13,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.transform = "none";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+              {soldOut ? (
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  style={{
+                    width: "100%",
+                    padding: "18px 24px",
+                    borderRadius: 10,
+                    border: "1.5px solid rgba(13,13,13,0.15)",
+                    background: "rgba(13,13,13,0.06)",
+                    color: "rgba(13,13,13,0.45)",
+                    fontSize: 12,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    fontFamily: "inherit",
+                    fontWeight: 500,
+                    cursor: "not-allowed",
+                  }}
                 >
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-                Add to Bag
-              </button>
-              <button
-                onClick={handleBuyNow}
-                style={{
-                  width: "100%",
-                  padding: "18px 24px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#0d0d0d",
-                  color: "#ffffff",
-                  fontSize: 12,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  fontFamily: "inherit",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.22s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#1a1a1a";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 8px 32px rgba(13,13,13,0.22)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#0d0d0d";
-                  e.currentTarget.style.transform = "none";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                Buy Now
-              </button>
+                  Sold Out — Back Soon
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleAddToBag}
+                    style={{
+                      width: "100%",
+                      padding: "18px 24px",
+                      borderRadius: 10,
+                      border: "1.5px solid #0d0d0d",
+                      background: "transparent",
+                      color: "#0d0d0d",
+                      fontSize: 12,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      fontFamily: "inherit",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      transition: "all 0.22s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(13,13,13,0.06)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 6px 24px rgba(13,13,13,0.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    Add to Bag
+                  </button>
+
+                  <button
+                    onClick={handleBuyNow}
+                    style={{
+                      width: "100%",
+                      padding: "18px 24px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: "#0d0d0d",
+                      color: "#ffffff",
+                      fontSize: 12,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      fontFamily: "inherit",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.22s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#1a1a1a";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 8px 32px rgba(13,13,13,0.22)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#0d0d0d";
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    Buy Now
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Trust badges */}
@@ -943,11 +1124,13 @@ export default function ProductPage({ params }) {
                 </p>
               ))}
             </Accordion>
+
             <Accordion title="Shipping & Delivery">
               Free standard shipping on orders above ₹999. Express delivery
               available at checkout. Estimated delivery: 3–5 business days.
               Pan-India shipping available.
             </Accordion>
+
             <Accordion title="Returns & Exchange">
               15-day hassle-free returns. Items must be unworn and in original
               packaging with tags attached. Exchanges processed within 3–5
@@ -959,7 +1142,9 @@ export default function ProductPage({ params }) {
 
       <Toast visible={toast.visible} message={toast.message} />
 
-      {showLoginRequired && <LoginRequired setShowLoginRequired={setShowLoginRequired} />}
+      {showLoginRequired && (
+        <LoginRequired setShowLoginRequired={setShowLoginRequired} />
+      )}
     </>
   );
 }

@@ -6,13 +6,6 @@ export async function POST(req) {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
       await req.json();
 
-    console.log(
-      "frontend recived fields: ",
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-    );
-
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
 
     const expectedSignature = crypto
