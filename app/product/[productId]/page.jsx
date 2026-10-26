@@ -564,7 +564,16 @@ export default function ProductPage({ params }) {
   const handleBuyNow = async () => {
     if (soldOut) return;
 
-    await handleAddToBag();
+    if (!selectedSize) {
+      setSizeShake(true);
+      return;
+    }
+
+    if (!isSignedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
+    
     showToast("Redirecting to checkout...");
     setTimeout(() => {
       window.location.href = "/checkout";
