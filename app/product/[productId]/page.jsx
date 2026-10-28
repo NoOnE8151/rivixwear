@@ -573,7 +573,7 @@ export default function ProductPage({ params }) {
       setShowLoginRequired(true);
       return;
     }
-    
+
     showToast("Redirecting to checkout...");
     setTimeout(() => {
       window.location.href = "/checkout";
@@ -1127,21 +1127,19 @@ export default function ProductPage({ params }) {
 
             {/* Accordions */}
             <Accordion title="Fabric & Care">
-              {product?.fabricAndCare?.split("\n\n").map((para, i) => (
-                <p key={i} style={{ margin: i > 0 ? "12px 0 0" : 0 }}>
-                  {para}
-                </p>
-              ))}
+              <div className="space-y-3">
+                <p>{product?.fabricCare?.fabric}</p>
+                <p>{product?.fabricCare?.care}</p>
+              </div>
             </Accordion>
 
             <Accordion title="Shipping & Delivery">
-              Free standard shipping on orders above ₹999. Express delivery
-              available at checkout. Estimated delivery: 3–5 business days.
-              Pan-India shipping available.
+              Free standard shipping on every order. Estimated delivery: 4-10
+              business days. Pan-India shipping available.
             </Accordion>
 
             <Accordion title="Returns & Exchange">
-              15-day hassle-free returns. Items must be unworn and in original
+              7-day hassle-free returns. Items must be unworn and in original
               packaging with tags attached. Exchanges processed within 3–5
               business days of receipt.
             </Accordion>

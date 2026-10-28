@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema(
     collection: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     variants: [
@@ -19,12 +19,12 @@ const productSchema = new mongoose.Schema(
         id: {
           type: String,
           required: true,
-          tirm: true
+          tirm: true,
         },
         name: {
           type: String,
           required: true,
-          trim: true
+          trim: true,
         },
 
         images: [
@@ -37,7 +37,7 @@ const productSchema = new mongoose.Schema(
         sizes: [
           {
             type: String,
-            enum: ["XS","S", "M", "L", "XL", "XXL", "XXXL"],
+            enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXL"],
             required: true,
           },
         ],
@@ -55,10 +55,21 @@ const productSchema = new mongoose.Schema(
         },
       },
     ],
+    fabricCare: {
+      fabric: {
+        type: String,
+        required: true,
+      },
+      care: {
+        type: String,
+        required: true,
+      },
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export default mongoose.models.Product || mongoose.model('Product', productSchema );
+export default mongoose.models.Product ||
+  mongoose.model("Product", productSchema);

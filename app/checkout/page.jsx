@@ -196,6 +196,7 @@ export default function Checkout() {
 
         if (result.success) {
           window.location.href = "/checkout/success";
+          
         } else {
           window.location.href = "/checkout/failed";
         }
