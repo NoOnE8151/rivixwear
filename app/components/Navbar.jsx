@@ -1,37 +1,52 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { ShoppingBag, Search, User, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { AnimatePresence } from "motion/react";
+
 import SearchInput from "./utils/SearchInput";
 import Cart from "./shop/Cart";
-import { useAuth } from "@clerk/nextjs";
 import LoginRequired from "./utils/LoginRequired";
 import ActiveOrders from "./utils/ActiveOrders";
 import MobileNavbar from "./MobileNavbar";
-import { AnimatePresence } from "motion/react";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { isLoaded, isSignedIn } = useAuth();
+
   const [scrolled, setScrolled] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(
-    pathname === "/" || "/profile" ? false : true,
+    pathname !== "/" && pathname !== "/profile",
   );
-  const { isLoaded, isSignedIn } = useAuth();
-  const [showLoginRequired, setShowLoginRequired] = useState(false);
 
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
+  const [isMobileNavbarOpen, setIsMobileNavbarOpen] = useState(false);
+
+  const [orders, setOrders] = useState([]);
+
+  // Update search state when navigating between routes
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
+    setIsSearchActive(pathname !== "/" && pathname !== "/profile");
+  }, [pathname]);
+
+  // Handle navbar scroll shadow
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+
+    onScroll();
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // handling shopping cart toggle
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  //fetching orders to show if user has an order
-  const [orders, setOrders] = useState([]);
-
+  // Fetch user orders
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -60,95 +75,111 @@ export default function Navbar() {
     fetchOrders();
   }, [isLoaded, isSignedIn]);
 
-  //handling mobile navbar
-  const [isMobileNavbarOpen, setIsMobileNavbarOpen] = useState(false);
-
   return (
-    <nav
-      className={`
+    <>
+      <nav
+        className={`
         sticky top-0 z-100
-        flex items-center justify-between
-        px-6 md:px-22 h-16
+        flex items-center
+        w-full md:h-20 h-14
+        md:px-10 px-4 lg:px-12 gap-3
         bg-[rgba(250,250,250,0.92)]
         border-b border-black/6
         transition-shadow duration-300
         ${scrolled ? "shadow-[0_4px_24px_rgba(0,0,0,0.08)]" : ""}
-      `}
-    >
-<AnimatePresence mode="wait">
-  {isMobileNavbarOpen && (
-    <MobileNavbar
-      setIsMobileNavbarOpen={setIsMobileNavbarOpen}
-    />
-  )}
-</AnimatePresence>
+        `}
+      >
+        {/* Mobile Navbar */}
+        <AnimatePresence mode="wait">
+          {isMobileNavbarOpen && (
+            <MobileNavbar setIsMobileNavbarOpen={setIsMobileNavbarOpen} />
+          )}
+        </AnimatePresence>
 
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 no-underline w-[25%]">
-        <img src="/assets/logo/rivix-symbol-black.png" alt="logo" width={40} />
-        <img
-          src="/assets/logo/rivix-wordmark-black.png"
-          alt="logo"
-          width={80}
-          className="pt-1 md:block hidden"
-        />
-      </Link>
-
-      {/* Links — hidden on mobile */}
-      {pathname === "/" && !isSearchActive && (
-        <ul className="hidden md:flex gap-9 list-none w-[50%] justify-center">
-          {[
-            { label: "Rivix Essentials", id: "essentials" },
-            { label: "About", id: "about" },
-          ].map((item) => (
-            <li key={item.id}>
-              <a href={`#${item.id}`} className="nav-link">
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {isSearchActive && (
-        <div className="w-[50%]">
-          <SearchInput></SearchInput>
+        {/* LEFT: Logo */}
+        <div className="flex items-center justify-start md:w-1/4 h-full shrink-0">
+          <Link href="/" className="flex items-center">
+            {" "}
+            {/*logo for desktop*/}
+            <img
+              src="/assets/logo/rivix-wordmark-black.png"
+              alt="RIVIX"
+              width={100}
+              className="w-20 md:w-25 h-auto"
+            />
+          </Link>
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-5 w-[25%]">
-        <button
-          onClick={() => setIsSearchActive((prev) => !prev)}
-          className=" hidden md:inline text-[11px] cursor-pointer"
-        >
-          {pathname === "/" && <Search />}
-        </button>
-        <Link
-          href={isSignedIn ? "/profile" : "/sign-up"}
-          className="nav-link hidden md:inline text-[11px]"
-        >
-          <User />
-        </Link>
-        <button
-          onClick={() => {
-            isSignedIn ? setIsCartOpen(true) : setShowLoginRequired(true);
-          }}
-          className="hidden md:inline cart-btn cursor-pointer"
-        >
-          <ShoppingBag />
-        </button>
-        <button onClick={() => setIsMobileNavbarOpen(true)}
-          className="md:hidden">
-          <Menu />
-        </button>
-      </div>
-      {isCartOpen && <Cart setIsCartOpen={setIsCartOpen} />}
+        {/* CENTER: Navigation Links / Search */}
+        <div className="flex flex-1 items-center justify-center min-w-0 h-full gap">
+          {pathname === "/" && !isSearchActive && (
+            <ul className="hidden md:flex items-center justify-center gap-9 list-none whitespace-nowrap">
+              {[
+                { label: "Essentials", id: "essentials" },
+                { label: "Motion", id: "motion" },
+                { label: "About", id: "about" },
+              ].map((item) => (
+                <li key={item.id}>
+                  <a href={`#${item.id}`} className="nav-link">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {showLoginRequired && (
-        <LoginRequired setShowLoginRequired={setShowLoginRequired} />
-      )}
-      <ActiveOrders orders={orders} />
-    </nav>
+        {/* RIGHT: Actions */}
+        <div className="flex items-center justify-end gap-5 md:w-1/3 h-full shrink-0">
+          {/* Search for desktop */}
+          <div className="w-full max-w-[320px] hidden md:block">
+            <SearchInput />
+          </div>
+
+          {/* Profile */}
+          <Link
+            href={isSignedIn ? "/profile" : "/sign-up"}
+            className="nav-link hidden md:inline-flex items-center justify-center"
+            aria-label="Profile"
+          >
+            <User size={20} />
+          </Link>
+
+          {/* Shopping Cart */}
+          <button
+            onClick={() => {
+              isSignedIn ? setIsCartOpen(true) : setShowLoginRequired(true);
+            }}
+            className="hidden md:inline-flex items-center justify-center cart-btn cursor-pointer"
+            aria-label="Shopping cart"
+          >
+            <ShoppingBag size={20} />
+          </button>
+
+          {/* Mobile Menu */}
+          <button
+            onClick={() => setIsMobileNavbarOpen(true)}
+            className="md:hidden inline-flex items-center justify-center cursor-pointer"
+            aria-label="Open menu"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+
+        {/* Cart */}
+        {isCartOpen && <Cart setIsCartOpen={setIsCartOpen} />}
+
+        {/* Login Required */}
+        {showLoginRequired && (
+          <LoginRequired setShowLoginRequired={setShowLoginRequired} />
+        )}
+
+        {/* Active Orders */}
+        <ActiveOrders orders={orders} />
+      </nav>
+       <div className="w-full px-2">
+            <SearchInput />
+          </div>
+    </>
   );
 }

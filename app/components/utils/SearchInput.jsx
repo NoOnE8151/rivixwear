@@ -30,19 +30,21 @@ const SearchInput = () => {
       <form
         onSubmit={handleSubmit}
         ref={containerRef}
-        className="search-wrapper w-full flex items-center relative"
+        className="search-wrapper w-full flex items-center relative bg-gray-100"
       >
         <input
           onChange={handleOnChange}
           type="text"
-          placeholder="Search - Rivix Signature Tee"
-          className="search-input border border-gray-900 rounded-full py-2 w-full pl-5 pr-12 focus:outline-none"
+          placeholder="Rivix Signature Tee"
+          className="search-input md:border md:rounded-full py-2 w-full pl-5 pr-12 focus:outline-none placeholder:text-sm"
         />
         <button
           type="submit"
-          className="absolute right-0 cursor-pointer bg-gray-900 h-full px-3 rounded-r-full"
+          disabled={!searchQuery}
+          className="absolute right-0 cursor-pointer md:bg-gray-900 h-full px-3 md:rounded-r-full"
         >
-          <Search color="white" />
+          <Search color="white" size={20} className="md:block hidden" />
+          <Search color="gray" size={20} className="block md:hidden" />
         </button>
       </form>
   );
