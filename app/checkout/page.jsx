@@ -156,7 +156,7 @@ export default function Checkout() {
     setShowSavedAddresses(false);
   };
 
-  //create order
+  //create order for razorpay
   const createOrder = async () => {
     const res = await fetch("/api/protected/payment/order/create", {
       method: "POST",
@@ -165,6 +165,22 @@ export default function Checkout() {
     console.log("fetched order details: ", r);
     return r.order.id;
   };
+
+  //place order for user
+  const placeOrder = async (paymentMethod) => {
+    const res = await fetch("/api/protected/orders/create", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ paymentMethod })
+    })
+    const r = await res.json(); //response
+    if (!r.success) {
+      alert("something went wrong, any debited amount will be refunded withing 24-72hrs if not then please contact us at rivixwear.in/contact");
+    };
+    return
+  }
 
   //handle checkout
   const submitCheckout = async (data) => {
@@ -195,8 +211,8 @@ export default function Checkout() {
         const result = await verifyRes.json();
 
         if (result.success) {
+          placeOrder();
           window.location.href = "/checkout/success";
-          
         } else {
           window.location.href = "/checkout/failed";
         }

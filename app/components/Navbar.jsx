@@ -177,7 +177,7 @@ export default function Navbar() {
         {/* Active Orders */}
         <ActiveOrders orders={orders} />
       </nav>
-       <div className="w-full px-2">
+       <div className="w-full px-2 block md:hidden">
             <SearchInput />
           </div>
     </>
