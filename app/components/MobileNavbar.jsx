@@ -12,21 +12,13 @@ export default function MobileNavbar({ setIsMobileNavbarOpen }) {
   const menuItems = [
     {
       icon: User,
-      label: "Profile",
-      href: "/profile",
+      label: "My Account",
+      href: "/my-account",
     },
     {
       icon: ShoppingBag,
-      label: "Bag",
+      label: "Cart",
       href: "/cart",
-    },
-    {
-      label: "Rivix Essentials",
-      href: "#essentials",
-    },
-    {
-      label: "About Us",
-      href: "#about",
     },
   ];
 
