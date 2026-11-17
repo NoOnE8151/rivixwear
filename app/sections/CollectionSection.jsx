@@ -16,7 +16,7 @@ const COLLECTIONS = [
     id: "essentials",
     title: "ESSENTIALS",
     subtitle: "Everyday Essentials",
-    href: "/collection/essential",
+    href: "/collection/essentials",
   },
   {
     id: "motion",

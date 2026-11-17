@@ -22,43 +22,59 @@ const Cart = ({ setIsCartOpen }) => {
 
   const debounceTimers = useRef({});
 
-  // Fetch cart products
-  const fetchCart = useCallback(async (signal) => {
-    setIsLoading(true);
-    setLoadError("");
+const fetchCart = useCallback(async (signal) => {
+  setIsLoading(true);
+  setLoadError("");
 
-    try {
-      const res = await fetch("/api/protected/user/cart/get", {
-        signal,
-      });
+  try {
+    const res = await fetch("/api/protected/user/cart/get", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      signal,
+    });
 
-      const data = await res.json();
+    const contentType = res.headers.get("content-type") || "";
+    const rawResponse = await res.text();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to load your cart.");
-      }
+    console.log("CART API DEBUG:", {
+      status: res.status,
+      statusText: res.statusText,
+      url: res.url,
+      contentType,
+      response: rawResponse.slice(0, 1500),
+    });
 
-      const fetchedItems = Array.isArray(data.cart) ? data.cart : [];
-
-      setItems(fetchedItems);
-
-      // Select individual cart entries, not just product IDs
-      setSelected(
-        new Set(fetchedItems.map((item) => getItemKey(item)))
+    if (!contentType.includes("application/json")) {
+      throw new Error(
+        `Cart API returned non-JSON response. HTTP ${res.status}. Check the browser console for the response.`
       );
-
-      console.log("Successfully fetched all cart items");
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error("Cart fetch failed:", error);
-        setLoadError(error.message || "Something went wrong.");
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false);
-      }
     }
-  }, []);
+
+    const data = JSON.parse(rawResponse);
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to load your cart.");
+    }
+
+    const fetchedItems = Array.isArray(data.cart) ? data.cart : [];
+
+    setItems(fetchedItems);
+    setSelected(new Set(fetchedItems.map((item) => getItemKey(item))));
+
+    console.log("Successfully fetched all cart items");
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      console.error("Cart fetch failed:", error);
+      setLoadError(error.message || "Something went wrong.");
+    }
+  } finally {
+    if (!signal?.aborted) {
+      setIsLoading(false);
+    }
+  }
+}, []);
 
   useEffect(() => {
     const controller = new AbortController();
