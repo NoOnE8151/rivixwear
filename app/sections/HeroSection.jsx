@@ -98,7 +98,7 @@ export default function HeroSection() {
       {/* CTA */}
       <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
         <Link
-          href="#"
+          href="/collections/coldwear"
           className="group inline-flex min-h-[52px] items-center gap-7 bg-[#111111] px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:bg-[#b8965a] hover:text-[#111111]"
         >
           Explore Collection
