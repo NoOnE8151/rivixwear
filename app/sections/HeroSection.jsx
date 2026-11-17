@@ -47,7 +47,7 @@ export default function HeroSection() {
       </p>
 
       {/* Discount */}
-      <div className="mt-8 flex w-fit max-w-full items-center gap-4 border border-[#ded8ce] bg-white/85 px-4 py-4 shadow-[0_5px_24px_rgba(0,0,0,0.035)] sm:gap-6 sm:px-5">
+      {/* <div className="mt-8 flex w-fit max-w-full items-center gap-4 border border-[#ded8ce] bg-white/85 px-4 py-4 shadow-[0_5px_24px_rgba(0,0,0,0.035)] sm:gap-6 sm:px-5">
 
         <div className="shrink-0">
           <p className="mb-1.5 text-[9px] font-medium uppercase tracking-[0.18em] text-[#858078]">
@@ -93,7 +93,7 @@ export default function HeroSection() {
             {copied ? "Code copied!" : "Tap to copy code"}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* CTA */}
       <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
