@@ -1,179 +1,209 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import fetchProduct from "@/utils/shop/product/fetchProduct";
+import { ArrowRight, Check, Copy } from "lucide-react";
+
+const OFFER_CODE = "RVXWINTER30";
 
 export default function HeroSection() {
-  const [product, setProduct] = useState({});
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchProduct("6a015366bb8a0b86f902833f")
-      .then((products) => {
-        const featuredProduct = products;
-        setProduct(featuredProduct);
-      })
-      .catch(console.error);
-  }, []);
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(OFFER_CODE);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy coupon:", error);
+    }
+  };
 
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const variantCount = product?.variants?.length || 0;
-
-  // auto slide every 5 sec
-  useEffect(() => {
-    if (variantCount < 2) return;
-
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % variantCount);
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [variantCount]);
-
-  const activeProduct = product?.variants?.[activeIndex];
-
-  // a variant is sold out only when its stock is a number below 1
-  const isOutOfStock = (variant) => Number(variant?.stock) < 1;
-  const activeSoldOut = isOutOfStock(activeProduct);
-
-  return (
-    <section className="md:flex min-h-[calc(100vh-100px)] md:h-[calc(100vh-100px)] w-screen bg-background overflow-hidden">
-      {/* left side */}
-      <div className="w-full md:w-1/2 h-auto md:h-full flex flex-col justify-center px-6 py-10 md:pl-32 md:pr-10 md:py-8">
-        <h1 className="text-5xl md:text-8xl font-heading font-bold tracking-wider leading-[0.92]">
-          define <br />
-          your <br />
-          <span className="font-serif italic capitalize text-4xl md:text-7xl tracking-normal">
-            direction.
-          </span>
-        </h1>
-
-        <div className="mt-8">
-          <Link
-            href={"/shop"}
-            className="bg-element text-foreground-inverse px-6 py-3 md:w-1/3 font-semibold uppercase hover:bg-element-hover transition-colors duration-300"
-          >
-            Shop Now
-          </Link>
-        </div>
+  const content = (
+    <>
+      {/* Campaign label */}
+      <div className="flex items-center gap-3">
+        <span className="h-px w-7 bg-accent" />
+        <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#8c795b] sm:text-xs">
+          RIVIX / The Winter Edit
+        </p>
       </div>
 
-      {/* right side */}
-      <div className="w-full md:w-1/2 h-auto md:h-full flex items-center justify-center px-6 pb-10 md:pb-8">
-        <div className="w-full max-w-[520px]">
-          <p className="uppercase tracking-[0.35em] text-xs text-neutral-500 mb-4">
-            Featured Product
+      {/* Heading */}
+      <h1 className="mt-7 text-[clamp(3rem,5.5vw,5.4rem)] font-semibold uppercase leading-[0.94] tracking-[-0.065em] text-[#111111]">
+        Cold days.
+        <br />
+        <span className="font-serif font-normal italic normal-case tracking-[-0.055em] text-[#8b7962]">
+          Better layers.
+        </span>
+      </h1>
+
+      {/* Description */}
+      <p className="mt-6 max-w-[410px] text-sm leading-7 text-[#68645e] sm:text-base">
+        The layers you'll reach for all winter.
+        Discover the RIVIX collection and make
+        your next rotation count.
+      </p>
+
+      {/* Discount */}
+      <div className="mt-8 flex w-fit max-w-full items-center gap-4 border border-[#ded8ce] bg-white/85 px-4 py-4 shadow-[0_5px_24px_rgba(0,0,0,0.035)] sm:gap-6 sm:px-5">
+
+        <div className="shrink-0">
+          <p className="mb-1.5 text-[9px] font-medium uppercase tracking-[0.18em] text-[#858078]">
+            Winter offer
           </p>
 
-          <div className="group relative h-[55vh] md:h-[68vh] max-h-[620px] min-h-[320px] rounded-[1.35rem] overflow-hidden bg-neutral-100">
-            {product?.variants?.map((item, index) => {
-              const soldOut = isOutOfStock(item);
-
-              return (
-                <div
-                  key={item._id}
-                  className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-                    activeIndex === index
-                      ? "opacity-100 translate-x-0 scale-100 z-20"
-                      : index < activeIndex
-                        ? "opacity-0 -translate-x-full scale-[1.02] z-10"
-                        : "opacity-0 translate-x-full scale-[1.02] z-10"
-                  }`}
-                >
-                  {item?.images?.[0] && (
-                    <Image
-                      src={item.images[0]}
-                      alt={item?.name || "Featured product"}
-                      fill
-                      priority={index === 0}
-                      className={`object-cover rounded-[1.35rem] transition-transform duration-700 ${
-                        soldOut
-                          ? "grayscale"
-                          : "group-hover:scale-[1.04] group-hover:rotate-[0.4deg]"
-                      }`}
-                    />
-                  )}
-
-                  {/* sold out screen */}
-                  {soldOut && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center text-center px-6 pb-44 md:pb-48 text-white">
-                      <div className="max-w-[320px]">
-                        <span className="inline-block px-4 py-1.5 rounded-full border border-white/70 text-xs uppercase tracking-[0.3em]">
-                          Sold Out
-                        </span>
-
-                        <p className="mt-4 text-lg md:text-xl font-semibold">
-                          Currently Unavailable
-                        </p>
-
-                        <p className="mt-2 text-sm text-white/80 leading-relaxed">
-                          This style has sold out. Fresh stock will be back
-                          soon — check back shortly.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            <div className="absolute inset-0 bg-linear-to-t from-black/45 via-black/10 to-transparent pointer-events-none" />
-
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white z-30">
-              <h3 className="text-2xl md:text-3xl font-semibold drop-shadow-[0_3px_8px_rgba(0,0,0,0.55)]">
-                {activeProduct?.name}
-              </h3>
-
-              <p className="text-sm text-white/90 mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
-                Oversized Signature Tee
-              </p>
-
-              <div className="mt-5 flex items-center justify-between gap-4">
-                <span
-                  className={`text-lg font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)] ${
-                    activeSoldOut ? "text-white/60 line-through" : ""
-                  }`}
-                >
-                  ₹{activeProduct?.price}
-                </span>
-
-                {activeSoldOut ? (
-                  <button
-                    type="button"
-                    disabled
-                    aria-disabled="true"
-                    className="px-6 py-3 rounded-full bg-white/20 text-white/70 text-sm uppercase tracking-wider cursor-not-allowed backdrop-blur-sm"
-                  >
-                    Sold Out
-                  </button>
-                ) : (
-                  <Link
-                    href={`/product/${product._id}`}
-                    className="px-6 py-3 rounded-full bg-element text-foreground-inverse text-sm uppercase tracking-wider hover:bg-element-hover hover:scale-105 transition-all duration-300 shadow-lg"
-                  >
-                    Buy Now
-                  </Link>
-                )}
-              </div>
-
-              <div className="flex gap-2 mt-5">
-                {product?.variants?.map((_, index) => (
-                  <span
-                    key={index}
-                    className={`h-0.75 rounded-full transition-all duration-500 ${
-                      activeIndex === index
-                        ? "w-10 bg-white"
-                        : "w-4 bg-white/40"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-5xl font-semibold leading-none tracking-[-0.075em] text-[#171717] sm:text-6xl">
+              30%
+            </span>
+            <span className="text-xs font-semibold tracking-wider text-[#8b7962]">
+              OFF
+            </span>
           </div>
         </div>
+
+        <div className="h-14 w-px shrink-0 bg-[#e5dfd5]" />
+
+        <div className="min-w-0">
+          <p className="mb-2 text-[9px] font-medium uppercase tracking-[0.15em] text-[#858078]">
+            Apply at checkout
+          </p>
+
+          <div className="flex items-center gap-2">
+            <code className="whitespace-nowrap text-xs font-semibold tracking-[0.09em] text-[#222] sm:text-sm">
+              {OFFER_CODE}
+            </code>
+
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              aria-label="Copy discount code"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-[#ded8ce] text-[#5f574b] transition-colors hover:border-accent hover:bg-[#b8965a]/10"
+            >
+              {copied ? <Check size={14} /> : <Copy size={13} />}
+            </button>
+          </div>
+
+          <p
+            aria-live="polite"
+            className="mt-1.5 text-[9px] text-[#9a896e]"
+          >
+            {copied ? "Code copied!" : "Tap to copy code"}
+          </p>
+        </div>
       </div>
-    </section>
+
+      {/* CTA */}
+      <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <Link
+          href="#"
+          className="group inline-flex min-h-[52px] items-center gap-7 bg-[#111111] px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:bg-[#b8965a] hover:text-[#111111]"
+        >
+          Explore Collection
+          <ArrowRight
+            size={16}
+            className="transition-transform duration-300 group-hover:translate-x-1"
+          />
+        </Link>
+
+        <span className="text-[10px] tracking-wide text-[#827c73]">
+          Use code at checkout
+        </span>
+      </div>
+    </>
   );
+
+  
+return (
+  <section className="w-full overflow-hidden bg-gray-200">
+
+    {/* Desktop Hero */}
+    <div className="relative hidden h-[calc(100svh-126px)] min-h-[600px] max-h-[800px] w-full items-center lg:flex">
+
+      {/* Background image - no mask */}
+      <img
+        src="/assets/covers/winterCover.png"
+        alt="RIVIX winter collection"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+
+      {/* Left blending - reduced spread */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            linear-gradient(
+              90deg,
+              #e5e7eb 0%,
+              #e5e7eb 25%,
+              rgba(229, 231, 235, 0.94) 34%,
+              rgba(229, 231, 235, 0.72) 42%,
+              rgba(229, 231, 235, 0.24) 50%,
+              transparent 56%
+            )
+          `,
+        }}
+      />
+
+      {/* Subtle top and bottom blending */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            linear-gradient(
+              180deg,
+              #e5e7eb 0%,
+              rgba(229, 231, 235, 0.65) 2%,
+              rgba(229, 231, 235, 0.15) 6%,
+              transparent 10%,
+              transparent 90%,
+              rgba(229, 231, 235, 0.15) 94%,
+              rgba(229, 231, 235, 0.65) 98%,
+              #e5e7eb 100%
+            )
+          `,
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-12 xl:px-20">
+        <div className="max-w-[540px]">
+          {content}
+        </div>
+      </div>
+
+    </div>
+
+    {/* Mobile Hero */}
+    <div className="lg:hidden">
+
+      <div className="relative h-[300px] w-full bg-gray-200 sm:h-[400px]">
+
+        <img
+          src="/assets/covers/winterCover.png"
+          alt="RIVIX winter collection"
+          className="h-full w-full object-cover object-[65%_center]"
+        />
+
+        {/* Top and bottom fades */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, #e5e7eb 0%, transparent 13%, transparent 87%, #e5e7eb 100%)",
+          }}
+        />
+
+      </div>
+      <div className="px-5 pb-12 pt-14 sm:px-10 sm:pt-16">
+        {content}
+      </div>
+
+    </div>
+
+  </section>
+);
+
 }

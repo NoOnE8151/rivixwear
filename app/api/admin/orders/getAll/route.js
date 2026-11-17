@@ -1,42 +1,60 @@
 import { NextResponse } from "next/server";
-import Order from "@/models/Order";
-import { connectDB } from "@/connections/connect db";
 import { auth } from "@clerk/nextjs/server";
 
-export async function GET() {
-    try {
-        const { sessionClaims, userId } = await auth();
-        const userRole = sessionClaims.metadata?.role;
-        if(!userId) { //check if user is authenticated
-            return NextResponse.json({
-                success: false,
-                message: 'unauthorized'
-            }, {
-                status: 401
-            })
-        } else if(userRole !== "admin") {//reject request if user is not admin
-            return NextResponse.json({
-                success: false,
-                message: "forbbidden"
-            }, {
-                status: 403
-            })
-        }
+import Order from "@/models/Order";
+import { connectDB } from "@/connections/connect db";
 
-        // send orders 
-        await connectDB();
-        const orders = await Order.find();
-        console.log("logging all orders in server side console", orders);
-        return NextResponse.json({
-            success: true,
-            message: "successfully fetched all orders",
-            orders
-        })
-    } catch (error) {
-        console.log(error);
-        return NextResponse.json({
-            success: false,
-            message: "internal server error"
-        })
+export async function GET() {
+  try {
+    const { userId, sessionClaims } = await auth();
+
+    // Check authentication
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "unauthorized",
+        },
+        { status: 401 }
+      );
     }
+
+    // Check admin authorization
+    if (sessionClaims?.metadata?.role !== "admin") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "forbidden",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Fetch all orders
+    await connectDB();
+
+    const orders = await Order.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Successfully fetched all orders.",
+        orders,
+      },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Admin orders fetch failed:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error.",
+      },
+      { status: 500 }
+    );
+  }
 }

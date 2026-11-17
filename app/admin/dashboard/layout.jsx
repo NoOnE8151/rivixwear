@@ -22,6 +22,11 @@ const navigation = [
     href: "/admin/dashboard/customers",
     icon: "○",
   },
+  {
+    name: "Returns",
+    href: "/admin/dashboard/returns",
+    icon: "↩",
+  },
 ];
 
 const secondaryNavigation = [
@@ -116,9 +121,7 @@ export default async function AdminDashboardLayout({ children }) {
               </div>
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  Administrator
-                </p>
+                <p className="truncate text-sm font-medium">Administrator</p>
 
                 <p className="text-[11px] text-foreground-muted">
                   Admin access
@@ -129,9 +132,7 @@ export default async function AdminDashboardLayout({ children }) {
         </aside>
 
         {/* Content */}
-        <div className="min-w-0 flex-1">
-          {children}
-        </div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );

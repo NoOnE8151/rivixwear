@@ -41,7 +41,6 @@ export async function PATCH(request) {
 
     // Get request body
     const body = await request.json();
-
     const { orderId, status } = body;
 
     // Validate order ID
@@ -82,7 +81,7 @@ export async function PATCH(request) {
       );
     }
 
-    // Don't allow changes to completed/cancelled orders
+    // Don't allow changes to fulfilled/cancelled orders
     if (
       order.status === "fulfilled" ||
       order.status === "cancelled"
@@ -90,14 +89,19 @@ export async function PATCH(request) {
       return NextResponse.json(
         {
           success: false,
-          message: `Cannot update an ${order.status} order`,
+          message: `Cannot update a ${order.status} order`,
         },
         { status: 400 }
       );
     }
 
-    // Update status
+    // Update order status
     order.status = status;
+
+    // Record the fulfillment date only once
+    if (status === "fulfilled" && !order.fulfilledAt) {
+      order.fulfilledAt = new Date();
+    }
 
     await order.save();
 
@@ -106,6 +110,7 @@ export async function PATCH(request) {
       message: "Order status updated successfully",
       order,
     });
+
   } catch (error) {
     console.error(
       "PATCH /api/admin/orders/updateStatus error:",

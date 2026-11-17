@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useUser } from "@clerk/nextjs";
 import { Suspense } from "react";
 import Script from "next/script";
 import {
   Mail,
+  Phone,
   MapPin,
   Tag,
   LockKeyhole,
@@ -74,6 +76,9 @@ function InputField({
 // Checkout page
 
 export default function Checkout() {
+  const { isLoaded: isClerkLoaded, user } = useUser();
+  const clerkEmail = user?.primaryEmailAddress?.emailAddress || "";
+
   const {
     register,
     handleSubmit,
@@ -81,6 +86,7 @@ export default function Checkout() {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
+      email: "",
       firstName: "",
       lastName: "",
       address: "",
@@ -95,27 +101,45 @@ export default function Checkout() {
     mode: "onBlur",
   });
 
-  // cart items
-  const [cartItems, setCartItems] = useState([]);
-  const displayItems = cartItems.map((item, index) => ({
-    ...item,
-    name: item.name || `Product ${index + 1}`,
-    price: item.price ?? 0,
-    quantity: item.quantity ?? 1,
-    variant:
-      item.variant ||
-      item.size ||
-      (item.variantId ? `Variant ${item.variantId}` : ""),
-  }));
+  // Prefill the contact email from the signed-in Clerk account.
+  // The field remains editable and is not reset when a saved address is selected.
+  useEffect(() => {
+    if (isClerkLoaded && clerkEmail) {
+      setValue("email", clerkEmail);
+    }
+  }, [isClerkLoaded, clerkEmail, setValue]);
 
-  // Calculate order totals
-  const subtotal = displayItems.reduce(
-    (total, item) => total + (item.price || 0) * (item.quantity || 1),
-    0,
-  );
+// Unique identifier for each cart item
+const getItemKey = (item) =>
+  `${item.id}-${item.variantId}-${item.size}`;
 
-  const shipping = 0;
-  const total = subtotal + shipping;
+// Cart items
+const [cartItems, setCartItems] = useState([]);
+
+const displayItems = cartItems.map((item, index) => ({
+  ...item,
+  cartItemId: getItemKey(item),
+  name: item.name || `Product ${index + 1}`,
+  price: item.price ?? 0,
+  quantity: item.quantity ?? item.qty ?? 1,
+  variant:
+    item.variant ||
+    (item.variantId ? `Variant ${item.variantId}` : ""),
+}));
+
+// Calculate order totals
+const subtotal = displayItems.reduce(
+  (total, item) => total + item.price * item.quantity,
+  0
+);
+
+const shipping = 0;
+const COD_CHARGE = 20;
+
+  const [paymentMethod, setPaymentMethod] = useState("prepaid");
+  const [showCodConfirmation, setShowCodConfirmation] = useState(false);
+  const codCharge = paymentMethod === "cod" ? COD_CHARGE : 0;
+  const total = subtotal + shipping + codCharge;
 
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
   //fetch cart items for cart checkout
@@ -148,6 +172,10 @@ export default function Checkout() {
 
   //managing form filling when a saved address is clicked
   const handleFillAddress = (address) => {
+    if (address.email) {
+      setValue("email", address.email, { shouldValidate: true });
+    }
+    setValue("phone", address.phone);
     setValue("address", address.address);
     setValue("apartment", address.apartment);
     setValue("city", address.city);
@@ -166,25 +194,55 @@ export default function Checkout() {
     return r.order.id;
   };
 
-  //place order for user
-  const placeOrder = async (paymentMethod) => {
-    const res = await fetch("/api/protected/orders/create", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ paymentMethod })
-    })
-    const r = await res.json(); //response
-    if (!r.success) {
-      alert("something went wrong, any debited amount will be refunded withing 24-72hrs if not then please contact us at rivixwear.in/contact");
+  // Create the order with an immutable snapshot of the checkout details.
+  // This preserves the exact delivery address used for this purchase.
+  const placeOrder = async (paymentMethod, checkoutData) => {
+    const shippingAddress = {
+      firstName: String(checkoutData.firstName || "").trim(),
+      lastName: String(checkoutData.lastName || "").trim(),
+      phone: String(checkoutData.phone || "").trim(),
+      address: String(checkoutData.address || "").trim(),
+      apartment: String(checkoutData.apartment || "").trim(),
+      city: String(checkoutData.city || "").trim(),
+      state: String(checkoutData.state || "").trim(),
+      pincode: String(checkoutData.pinCode || "").trim(),
+      country: String(checkoutData.country || "India").trim(),
     };
-    return
-  }
+
+    const res = await fetch("/api/protected/orders/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentMethod,
+        email: String(checkoutData.email || "").trim().toLowerCase(),
+        shippingAddress,
+      }),
+    });
+    const r = await res.json(); // response
+
+    if (!res.ok || !r.success) {
+      throw new Error(
+        r.message ||
+          "Something went wrong while placing your order. Please contact us at rivixwear.in/contact."
+      );
+    }
+
+    return r;
+  };
 
   //handle checkout
   const submitCheckout = async (data) => {
-    const orderId = await createOrder();
+    try {
+      // COD orders are created directly without opening Razorpay.
+      if (paymentMethod === "cod") {
+        await placeOrder("cod", data);
+        window.location.href = "/checkout/success";
+        return;
+      }
+
+      const orderId = await createOrder();
 
     //payment handle scripts:
     const options = {
@@ -211,8 +269,13 @@ export default function Checkout() {
         const result = await verifyRes.json();
 
         if (result.success) {
-          placeOrder();
-          window.location.href = "/checkout/success";
+          try {
+            await placeOrder("prepaid", data);
+            window.location.href = "/checkout/success";
+          } catch (error) {
+            console.error("Order creation failed:", error);
+            window.location.href = "/checkout/failed";
+          }
         } else {
           window.location.href = "/checkout/failed";
         }
@@ -232,7 +295,11 @@ export default function Checkout() {
       alert(response.error.metadata.order_id);
       alert(response.error.metadata.payment_id);
     });
-    rzp1.open();
+      rzp1.open();
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      alert(error.message || "Unable to process checkout. Please try again.");
+    }
   };
 
   return (
@@ -367,8 +434,61 @@ export default function Checkout() {
                   )}
                 </div>
 
+                {/* Email address */}
+                <div className="mb-4">
+                  <div className="relative">
+                    <Mail
+                      size={20}
+                      strokeWidth={1.5}
+                      className="
+                      pointer-events-none absolute left-4 top-1/2
+                      -translate-y-1/2 text-neutral-700
+                    "
+                    />
+
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      placeholder="you@example.com"
+                      {...register("email", {
+                        required: "Email address is required",
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Enter a valid email address",
+                        },
+                        maxLength: {
+                          value: 254,
+                          message: "Email address is too long",
+                        },
+                      })}
+                      className={`
+                      h-16 w-full rounded-xl border bg-white
+                      pl-12 pr-4 text-sm outline-none transition
+                      placeholder:text-neutral-400
+                      focus:border-neutral-950
+                      focus:ring-1 focus:ring-neutral-950
+                      ${errors.email ? "border-red-400" : "border-neutral-200"}
+                    `}
+                    />
+
+                    <label
+                      htmlFor="email"
+                      className="
+                      pointer-events-none absolute left-12 top-2
+                      text-xs text-neutral-500
+                    "
+                    >
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <FieldError message={errors.email?.message} />
+                </div>
+
+                {/* Phone number */}
                 <div className="relative">
-                  <Mail
+                  <Phone
                     size={20}
                     strokeWidth={1.5}
                     className="
@@ -380,9 +500,15 @@ export default function Checkout() {
                   <input
                     id="phone"
                     type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
                     placeholder="9973XXXXXX"
                     {...register("phone", {
-                      required: "Phone no is required",
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^[0-9]{10}$/,
+                        message: "Enter a valid 10-digit phone number",
+                      },
                     })}
                     className={`
                     h-16 w-full rounded-xl border bg-white
@@ -628,6 +754,77 @@ export default function Checkout() {
                 </div>
               </section>
 
+              {/* Payment method */}
+              <section className="mt-12">
+                <h2 className="mb-5 font-heading text-xl font-bold uppercase sm:text-2xl">
+                  Payment Method
+                </h2>
+
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("prepaid")}
+                    aria-pressed={paymentMethod === "prepaid"}
+                    className={`flex min-h-[76px] w-full items-center justify-between rounded-xl border px-5 text-left transition ${
+                      paymentMethod === "prepaid"
+                        ? "border-neutral-950 bg-neutral-50 ring-1 ring-neutral-950"
+                        : "border-neutral-300 hover:border-neutral-500"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                          paymentMethod === "prepaid"
+                            ? "border-[6px] border-neutral-950"
+                            : "border-neutral-300"
+                        }`}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold">Prepaid</p>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Pay securely online using Razorpay
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold">No extra charge</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (paymentMethod !== "cod") {
+                        setShowCodConfirmation(true);
+                      }
+                    }}
+                    aria-pressed={paymentMethod === "cod"}
+                    className={`flex min-h-[76px] w-full items-center justify-between rounded-xl border px-5 text-left transition ${
+                      paymentMethod === "cod"
+                        ? "border-neutral-950 bg-neutral-50 ring-1 ring-neutral-950"
+                        : "border-neutral-300 hover:border-neutral-500"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                          paymentMethod === "cod"
+                            ? "border-[6px] border-neutral-950"
+                            : "border-neutral-300"
+                        }`}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold">Cash on Delivery</p>
+                        <p className="mt-1 text-sm text-neutral-500">
+                          Pay when your order arrives
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold">
+                      +{formatPrice(COD_CHARGE)}
+                    </span>
+                  </button>
+                </div>
+              </section>
+
               {/* Mobile payment button */}
 
               <button
@@ -789,6 +986,13 @@ export default function Checkout() {
                       {shipping === 0 ? "Free" : formatPrice(shipping)}
                     </span>
                   </div>
+
+                  {paymentMethod === "cod" && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Cash on Delivery fee</span>
+                      <span className="font-medium">{formatPrice(COD_CHARGE)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="my-6 h-px bg-neutral-200" />
@@ -840,6 +1044,59 @@ export default function Checkout() {
             </aside>
           </form>
         </main>
+
+        {/* COD confirmation modal */}
+        {showCodConfirmation && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 py-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cod-confirmation-title"
+          >
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+                <LockKeyhole size={22} className="text-neutral-900" />
+              </div>
+
+              <h2
+                id="cod-confirmation-title"
+                className="font-heading text-xl font-bold uppercase"
+              >
+                Confirm Cash on Delivery
+              </h2>
+
+              <p className="mt-3 text-sm leading-6 text-neutral-600">
+                Cash on Delivery includes an additional {formatPrice(COD_CHARGE)} handling
+                charge. You will pay{" "}
+                <span className="font-semibold text-neutral-950">
+                  {formatPrice(subtotal + shipping + COD_CHARGE)}
+                </span>{" "}
+                when your order arrives. Do you want to continue with COD?
+              </p>
+
+              <div className="mt-7 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCodConfirmation(false)}
+                  className="h-12 rounded-xl border border-neutral-300 px-4 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-100"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod("cod");
+                    setShowCodConfirmation(false);
+                  }}
+                  className="h-12 rounded-xl bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                >
+                  Confirm COD
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Floating button */}
 

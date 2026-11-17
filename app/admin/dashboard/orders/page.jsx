@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const PRODUCT_API = "/api/public/shop/product/get";
+
 const statusFilters = [
   { label: "All", value: "all" },
   { label: "Pending", value: "pending" },
@@ -73,6 +75,65 @@ function getTotalItems(products = []) {
   return products.reduce(
     (total, product) => total + product.quantity,
     0
+  );
+}
+
+function getProductInfo(product, variantId) {
+  if (!product) return null;
+
+  const variant = product.variants?.find(
+    (item) => String(item.id) === String(variantId)
+  );
+
+  return {
+    name: product.name,
+    collection: product.collection,
+    variantName: variant?.name || null,
+    image: variant?.images?.[0] || null,
+  };
+}
+
+function getPaymentLabel(method) {
+  switch (String(method || "").toLowerCase()) {
+    case "cod":
+      return "Cash on Delivery";
+    case "prepaid":
+      return "Prepaid";
+    default:
+      return "Not specified";
+  }
+}
+
+function getCustomerName(order) {
+  const shipping = order?.shippingAddress || {};
+  const name = [shipping.firstName, shipping.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return name || order?.customerName || "Customer details unavailable";
+}
+
+
+function ProductThumbnail({ src, name }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => setHasError(false), [src]);
+
+  return (
+    <div className="flex h-24 w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-element-border bg-background-soft">
+      {src && !hasError ? (
+        <img
+          src={src}
+          alt={name || "Product"}
+          loading="lazy"
+          onError={() => setHasError(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <PackageIcon />
+      )}
+    </div>
   );
 }
 
@@ -321,6 +382,7 @@ function LoadingState() {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [productDetails, setProductDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -359,6 +421,12 @@ export default function OrdersPage() {
 
         const data = await response.json();
 
+        if (!response.ok || !data?.success) {
+          throw new Error(
+            data?.message || `Failed to fetch orders (${response.status})`
+          );
+        }
+
         /*
          * Supports both:
          *
@@ -392,6 +460,84 @@ export default function OrdersPage() {
 
     fetchOrders();
   }, []);
+
+  // Fetch each unique product once, using the same product endpoint and
+  // variant-resolution pattern as the customer My Orders page.
+  useEffect(() => {
+    const controller = new AbortController();
+    const productIds = [
+      ...new Set(
+        orders
+          .flatMap((order) =>
+            Array.isArray(order.products)
+              ? order.products.map((item) => String(item.productId || ""))
+              : []
+          )
+          .filter(Boolean)
+      ),
+    ];
+
+    if (!productIds.length) {
+      setProductDetails({});
+      return () => controller.abort();
+    }
+
+    setProductDetails(
+      Object.fromEntries(
+        productIds.map((id) => [id, { loading: true, product: null }])
+      )
+    );
+
+    async function fetchProduct(productId) {
+      try {
+        const response = await fetch(PRODUCT_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) throw new Error("Product request failed.");
+        const data = await response.json();
+        if (!data?.success) throw new Error(data?.message || "Product not found.");
+
+        let product = data.products;
+        if (Array.isArray(product)) {
+          product = product.find((item) => String(item._id) === productId) || null;
+        }
+
+        return {
+          productId,
+          product:
+            product && typeof product === "object" && !Array.isArray(product)
+              ? product
+              : null,
+        };
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error(`Unable to load product ${productId}:`, error);
+        }
+        return { productId, product: null };
+      }
+    }
+
+    async function fetchProducts() {
+      const results = await Promise.all(productIds.map(fetchProduct));
+      if (controller.signal.aborted) return;
+
+      setProductDetails(
+        Object.fromEntries(
+          results.map(({ productId, product }) => [
+            productId,
+            { loading: false, product },
+          ])
+        )
+      );
+    }
+
+    fetchProducts();
+    return () => controller.abort();
+  }, [orders]);
 
   const filteredOrders =
     filter === "all"
@@ -666,8 +812,8 @@ export default function OrdersPage() {
                               </div>
 
                               <p className="mt-1 truncate text-xs text-foreground-muted">
-                                User ID:{" "}
-                                {order.userId}
+                                {getCustomerName(order)}
+                                {order.email ? ` · ${order.email}` : ""}
                               </p>
                             </div>
                           </div>
@@ -702,8 +848,7 @@ export default function OrdersPage() {
                               </p>
 
                               <p className="mt-1 text-sm font-medium uppercase">
-                                {order.paymentMethod ||
-                                  "—"}
+                                {getPaymentLabel(order.paymentMethod)}
                               </p>
                             </div>
 
@@ -811,162 +956,150 @@ export default function OrdersPage() {
                       {/* Expanded details */}
                       {isExpanded && (
                         <div className="border-t border-element-border bg-background px-4 py-5 sm:px-5">
-                          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+                          <div className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
                             {/* Products */}
-                            <div>
+                            <section>
                               <div className="mb-3">
                                 <h3 className="text-xs font-semibold uppercase tracking-[0.15em]">
                                   Products
                                 </h3>
-
                                 <p className="mt-1 text-xs text-foreground-muted">
-                                  Items included in this
-                                  order
+                                  Products and variants included in this order
                                 </p>
                               </div>
 
-                              <div className="overflow-hidden rounded-lg border border-element-border">
-                                <div className="hidden grid-cols-[1fr_100px_80px_100px] border-b border-element-border px-4 py-3 text-[10px] uppercase tracking-wider text-foreground-muted sm:grid">
-                                  <span>Product</span>
-                                  <span>Size</span>
-                                  <span>Qty</span>
-                                  <span>Price</span>
-                                </div>
+                              <div className="divide-y divide-element-border overflow-hidden rounded-lg border border-element-border">
+                                {(order.products || []).map((item, index) => {
+                                  const productId = String(item.productId || "");
+                                  const lookup = productDetails[productId];
+                                  const productInfo = lookup?.product
+                                    ? getProductInfo(lookup.product, item.variantId)
+                                    : null;
+                                  const quantity = Number(item.quantity) || 0;
+                                  const price = Number(item.price) || 0;
 
-                                {order.products?.map(
-                                  (
-                                    product,
-                                    index
-                                  ) => (
+                                  return (
                                     <div
-                                      key={`${product.variantId}-${index}`}
-                                      className="grid gap-3 border-b border-element-border p-4 last:border-0 sm:grid-cols-[1fr_100px_80px_100px] sm:items-center sm:gap-0 sm:px-4 sm:py-3"
+                                      key={item._id || `${productId}-${item.variantId}-${index}`}
+                                      className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
                                     >
-                                      <div>
-                                        <p className="text-xs font-medium">
-                                          {
-                                            product.productId
-                                          }
+                                      <ProductThumbnail
+                                        src={productInfo?.image}
+                                        name={productInfo?.name}
+                                      />
+
+                                      <div className="min-w-0 flex-1">
+                                        <p className="break-words text-sm font-semibold text-foreground">
+                                          {lookup?.loading
+                                            ? "Loading product..."
+                                            : productInfo?.name || "Product information unavailable"}
                                         </p>
+                                        {productInfo?.collection && (
+                                          <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-foreground-muted">
+                                            {productInfo.collection}
+                                          </p>
+                                        )}
+                                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground-muted">
+                                          <span>
+                                            {productInfo?.variantName || `Variant: ${item.variantId || "—"}`}
+                                          </span>
+                                          <span>Size: {item.size || "—"}</span>
+                                          <span>Qty: {quantity}</span>
+                                        </div>
+                                      </div>
 
-                                        <p className="mt-1 text-[10px] text-foreground-muted">
-                                          Variant:{" "}
-                                          {
-                                            product.variantId
-                                          }
+                                      <div className="shrink-0 border-t border-element-border pt-3 text-left sm:border-0 sm:pt-0 sm:text-right">
+                                        <p className="text-xs text-foreground-muted">
+                                          {formatCurrency(price)} × {quantity}
                                         </p>
-                                      </div>
-
-                                      <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[10px] text-foreground-muted sm:hidden">
-                                          Size
-                                        </span>
-
-                                        <span className="text-xs font-medium">
-                                          {
-                                            product.size
-                                          }
-                                        </span>
-                                      </div>
-
-                                      <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[10px] text-foreground-muted sm:hidden">
-                                          Quantity
-                                        </span>
-
-                                        <span className="text-xs font-medium">
-                                          {
-                                            product.quantity
-                                          }
-                                        </span>
-                                      </div>
-
-                                      <div className="flex items-center justify-between sm:block">
-                                        <span className="text-[10px] text-foreground-muted sm:hidden">
-                                          Price
-                                        </span>
-
-                                        <span className="text-xs font-medium">
-                                          {formatCurrency(
-                                            product.price *
-                                              product.quantity
-                                          )}
-                                        </span>
+                                        <p className="mt-1 text-sm font-semibold text-foreground">
+                                          {formatCurrency(price * quantity)}
+                                        </p>
                                       </div>
                                     </div>
-                                  )
+                                  );
+                                })}
+
+                                {(!order.products || order.products.length === 0) && (
+                                  <p className="p-4 text-sm text-foreground-muted">
+                                    No products are recorded for this order.
+                                  </p>
                                 )}
                               </div>
-                            </div>
+                            </section>
 
-                            {/* Order information */}
-                            <div>
-                              <div className="mb-3">
-                                <h3 className="text-xs font-semibold uppercase tracking-[0.15em]">
-                                  Order Information
-                                </h3>
-
-                                <p className="mt-1 text-xs text-foreground-muted">
-                                  Order metadata
-                                </p>
-                              </div>
-
-                              <div className="rounded-lg border border-element-border">
-                                <div className="grid grid-cols-[110px_1fr] gap-4 border-b border-element-border p-4">
-                                  <span className="text-xs text-foreground-muted">
-                                    User ID
-                                  </span>
-
-                                  <span className="break-all text-right font-mono text-[11px]">
-                                    {order.userId}
-                                  </span>
+                            <div className="space-y-6">
+                              {/* Customer and shipping details */}
+                              <section>
+                                <div className="mb-3">
+                                  <h3 className="text-xs font-semibold uppercase tracking-[0.15em]">
+                                    Customer & Shipping
+                                  </h3>
+                                  <p className="mt-1 text-xs text-foreground-muted">
+                                    Contact and delivery details saved with this order
+                                  </p>
                                 </div>
 
-                                <div className="grid grid-cols-[110px_1fr] gap-4 border-b border-element-border p-4">
-                                  <span className="text-xs text-foreground-muted">
-                                    Order ID
-                                  </span>
+                                <div className="rounded-lg border border-element-border">
+                                  {[
+                                    ["Customer", getCustomerName(order)],
+                                    ["Phone", order.shippingAddress?.phone || order.phone],
+                                    ["Email", order.email],
+                                    ["Address", order.shippingAddress?.address],
+                                    ["Apartment", order.shippingAddress?.apartment],
+                                    ["City", order.shippingAddress?.city],
+                                    ["State", order.shippingAddress?.state],
+                                    ["PIN code", order.shippingAddress?.pincode || order.shippingAddress?.pinCode],
+                                    ["Country", order.shippingAddress?.country],
+                                  ].map(([label, rawValue], index, rows) => (
+                                    <div
+                                      key={label}
+                                      className={`grid grid-cols-[88px_1fr] gap-3 p-4 ${index !== rows.length - 1 ? "border-b border-element-border" : ""}`}
+                                    >
+                                      <span className="text-xs text-foreground-muted">
+                                        {label}
+                                      </span>
+                                      <span className="break-words text-right text-xs font-medium text-foreground">
+                                        {rawValue || "Not available for this order"}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </section>
 
-                                  <span className="break-all text-right font-mono text-[11px]">
-                                    {order._id}
-                                  </span>
+                              {/* Order information */}
+                              <section>
+                                <div className="mb-3">
+                                  <h3 className="text-xs font-semibold uppercase tracking-[0.15em]">
+                                    Order Information
+                                  </h3>
+                                  <p className="mt-1 text-xs text-foreground-muted">
+                                    Order metadata
+                                  </p>
                                 </div>
 
-                                <div className="grid grid-cols-[110px_1fr] gap-4 border-b border-element-border p-4">
-                                  <span className="text-xs text-foreground-muted">
-                                    Payment
-                                  </span>
-
-                                  <span className="text-right text-xs font-medium uppercase">
-                                    {order.paymentMethod ||
-                                      "—"}
-                                  </span>
+                                <div className="rounded-lg border border-element-border">
+                                  {[
+                                    ["User ID", order.userId || "—"],
+                                    ["Order ID", order._id || "—"],
+                                    ["Payment", getPaymentLabel(order.paymentMethod)],
+                                    ["Created", formatDate(order.createdAt)],
+                                    ["Updated", formatDate(order.updatedAt)],
+                                  ].map(([label, value], index, rows) => (
+                                    <div
+                                      key={label}
+                                      className={`grid grid-cols-[88px_1fr] gap-3 p-4 ${index !== rows.length - 1 ? "border-b border-element-border" : ""}`}
+                                    >
+                                      <span className="text-xs text-foreground-muted">
+                                        {label}
+                                      </span>
+                                      <span className="break-all text-right text-xs font-medium text-foreground">
+                                        {value}
+                                      </span>
+                                    </div>
+                                  ))}
                                 </div>
-
-                                <div className="grid grid-cols-[110px_1fr] gap-4 border-b border-element-border p-4">
-                                  <span className="text-xs text-foreground-muted">
-                                    Created
-                                  </span>
-
-                                  <span className="text-right text-xs">
-                                    {formatDate(
-                                      order.createdAt
-                                    )}
-                                  </span>
-                                </div>
-
-                                <div className="grid grid-cols-[110px_1fr] gap-4 p-4">
-                                  <span className="text-xs text-foreground-muted">
-                                    Updated
-                                  </span>
-
-                                  <span className="text-right text-xs">
-                                    {formatDate(
-                                      order.updatedAt
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
+                              </section>
                             </div>
                           </div>
                         </div>

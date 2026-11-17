@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import razorpay from "@/utils/payment/instance";
 import { auth } from "@clerk/nextjs/server";
@@ -7,51 +8,62 @@ import { connectDB } from "@/connections/connect db";
 export async function POST() {
   try {
     await connectDB();
+
     const { userId } = await auth();
 
-    //check if user is authenticated
     if (!userId) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "unauthorized",
-        },
-        {
-          status: 401,
-        },
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    //fetching user's cart
+    // Fetch user's cart
     const cart = await Cart.findOne({ userId });
+
+    if (!cart || cart.products.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Your cart is empty" },
+        { status: 400 }
+      );
+    }
+
     const cartItems = cart.products;
-    console.log("cartitems are: ", cartItems);
 
-    //calculating total cost
+    // Calculate total including quantities
     const totalCostInRupees = cartItems.reduce(
-      (sum, item) => sum + item.price,
-      0,
+      (sum, item) => sum + item.price * item.quantity,
+      0
     );
-    const totalCostInPaise = totalCostInRupees * 100; //razorpay only accepts amount in paise
 
-    //creating the order
+    const totalCostInPaise = Math.round(totalCostInRupees * 100);
+
+    if (totalCostInPaise <= 0) {
+      return NextResponse.json(
+        { success: false, message: "Invalid order amount" },
+        { status: 400 }
+      );
+    }
+
+    // Create Razorpay order
     const order = await razorpay.orders.create({
       amount: totalCostInPaise,
       currency: "INR",
+      receipt: `receipt_${Date.now()}`,
     });
-
-    console.log("successfully created order", order);
 
     return NextResponse.json({
       success: true,
-      message: "successfully created order",
+      message: "Successfully created order",
       order,
     });
+
   } catch (error) {
-    console.log(error);
-    return NextResponse.json({
-      success: false,
-      message: "internal server error",
-    });
+    console.error("Razorpay order creation error:", error);
+
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

@@ -177,7 +177,7 @@ export default function OrderPlaced() {
               </Link>
 
               <Link
-                href="/profile"
+                href="/my-account"
                 className="min-h-12 px-5 py-3.5 border border-black/15 text-[#0a0a0a] flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold tracking-wide hover:bg-[#fafafa] transition-colors duration-200 rounded-lg"
               >
                 TRACK YOUR ORDER

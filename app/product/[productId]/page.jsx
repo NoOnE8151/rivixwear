@@ -37,11 +37,8 @@ function ProductImage({ src, color, variantName, fading, soldOut }) {
       style={{ background: color }}
     >
       <div
-        className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-200"
-        style={{
-          background: "var(--color-background)",
-          opacity: fading ? 1 : 0,
-        }}
+        className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-200 [background:var(--color-background)]"
+        style={{ opacity: fading ? 1 : 0 }}
       />
 
       {!loaded && (
@@ -53,18 +50,13 @@ function ProductImage({ src, color, variantName, fading, soldOut }) {
             fill="none"
             stroke="currentColor"
             strokeWidth="1"
-            style={{ opacity: 0.3 }}
+            className="[opacity:0.3]" 
           >
             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
             <line x1="7" y1="7" x2="7.01" y2="7" />
           </svg>
           <span
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 13,
-              letterSpacing: "0.15em",
-              color: "rgba(13,13,13,0.3)",
-            }}
+            className="[font-family:'Bebas_Neue',_sans-serif] [font-size:13px] [letter-spacing:0.15em] [color:rgba(13,13,13,0.3)]" 
           >
             {variantName}
           </span>
@@ -75,72 +67,28 @@ function ProductImage({ src, color, variantName, fading, soldOut }) {
         src={src}
         alt={variantName}
         onLoad={() => setLoaded(true)}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          opacity: loaded ? 1 : 0,
-          filter: soldOut ? "grayscale(1)" : "none",
-          transition: "opacity 0.4s ease, filter 0.4s ease",
-        }}
+        className="[position:absolute] [inset:0] [width:100%] [height:100%] [object-fit:contain] [transition:opacity_0.4s_ease,_filter_0.4s_ease]" style={{ opacity: loaded ? 1 : 0, filter: soldOut ? "grayscale(1)" : "none" }}
       />
 
       {/* SOLD OUT SCREEN */}
       {soldOut && (
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 15,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            padding: 24,
-            background: "rgba(13,13,13,0.58)",
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)",
-            color: "#ffffff",
-          }}
+          className="[position:absolute] [inset:0] [z-index:15] [display:flex] [flex-direction:column] [align-items:center] [justify-content:center] [text-align:center] [padding:24px] [background:rgba(13,13,13,0.58)] [backdrop-filter:blur(2px)] [-webkit-backdrop-filter:blur(2px)] [color:#ffffff]" 
         >
           <span
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 13,
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              padding: "6px 16px",
-              borderRadius: 100,
-              border: "1px solid rgba(255,255,255,0.6)",
-            }}
+            className="[font-family:'Bebas_Neue',_sans-serif] [font-size:13px] [letter-spacing:0.3em] [text-transform:uppercase] [padding:6px_16px] [border-radius:100px] [border:1px_solid_rgba(255,255,255,0.6)]" 
           >
             Sold Out
           </span>
 
           <div
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 34,
-              letterSpacing: "0.06em",
-              lineHeight: 1,
-              margin: "16px 0 8px",
-            }}
+            className="[font-family:'Bebas_Neue',_sans-serif] [font-size:34px] [letter-spacing:0.06em] [line-height:1] [margin:16px_0_8px]" 
           >
             Currently Unavailable
           </div>
 
           <p
-            style={{
-              margin: 0,
-              maxWidth: 300,
-              fontSize: 13,
-              lineHeight: 1.7,
-              fontWeight: 300,
-              color: "rgba(255,255,255,0.8)",
-            }}
+            className="[margin:0] [max-width:300px] [font-size:13px] [line-height:1.7] [font-weight:300] [color:rgba(255,255,255,0.8)]" 
           >
             This colour has sold out. Fresh stock will be back soon — please
             check back shortly.
@@ -158,33 +106,18 @@ function StockBar({ stock }) {
   return (
     <div className="mb-7 mt-1">
       <div
-        className="flex justify-between items-center mb-1.5"
-        style={{
-          fontSize: 11,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-        }}
+        className="flex justify-between items-center mb-1.5 [font-size:11px] [letter-spacing:0.08em] [text-transform:uppercase]"
+        
       >
-        <span style={{ color: "#6b6560" }}>Stock level</span>
-        <strong style={{ color: "#0d0d0d" }}>{stock} left</strong>
+        <span className="[color:#6b6560]" >Stock level</span>
+        <strong className="[color:#0d0d0d]" >{stock} left</strong>
       </div>
 
       <div
-        style={{
-          height: 3,
-          background: "rgba(13,13,13,0.08)",
-          borderRadius: 100,
-          overflow: "hidden",
-        }}
+        className="[height:3px] [background:rgba(13,13,13,0.08)] [border-radius:100px] [overflow:hidden]" 
       >
         <div
-          style={{
-            height: "100%",
-            borderRadius: 100,
-            background: isLow ? "#c97c30" : "#b8965a",
-            width: pct + "%",
-            transition: "width 0.6s cubic-bezier(0.25,0.46,0.45,0.94)",
-          }}
+          className="[height:100%] [border-radius:100px] [transition:width_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)]" style={{ background: isLow ? "#c97c30" : "#b8965a", width: pct + "%" }}
         />
       </div>
     </div>
@@ -194,27 +127,11 @@ function StockBar({ stock }) {
 function SoldOutNotice() {
   return (
     <div
-      className="mb-7 mt-1"
-      style={{
-        padding: "12px 14px",
-        borderRadius: 8,
-        background: "rgba(13,13,13,0.04)",
-        border: "1px solid rgba(13,13,13,0.12)",
-        fontSize: 12,
-        lineHeight: 1.6,
-        letterSpacing: "0.03em",
-        color: "#6b6560",
-      }}
+      className="mb-7 mt-1 [padding:12px_14px] [border-radius:8px] [background:rgba(13,13,13,0.04)] [border:1px_solid_rgba(13,13,13,0.12)] [font-size:12px] [line-height:1.6] [letter-spacing:0.03em] [color:#6b6560]"
+      
     >
       <strong
-        style={{
-          display: "block",
-          color: "#0d0d0d",
-          fontSize: 11,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          marginBottom: 2,
-        }}
+        className="[display:block] [color:#0d0d0d] [font-size:11px] [letter-spacing:0.12em] [text-transform:uppercase] [margin-bottom:2px]" 
       >
         Sold out
       </strong>
@@ -229,26 +146,11 @@ function LowStockAlert({ stock }) {
 
   return (
     <div
-      className="flex items-center gap-2 mb-5"
-      style={{
-        padding: "10px 14px",
-        borderRadius: 8,
-        background: "rgba(184,150,90,0.1)",
-        border: "1px solid rgba(184,150,90,0.25)",
-        fontSize: 12,
-        color: "#8a6830",
-        letterSpacing: "0.03em",
-      }}
+      className="flex items-center gap-2 mb-5 [padding:10px_14px] [border-radius:8px] [background:rgba(184,150,90,0.1)] [border:1px_solid_rgba(184,150,90,0.25)] [font-size:12px] [color:#8a6830] [letter-spacing:0.03em]"
+      
     >
       <div
-        style={{
-          width: 7,
-          height: 7,
-          borderRadius: "50%",
-          background: "#b8965a",
-          flexShrink: 0,
-          animation: "rivix-pulse 1.5s infinite",
-        }}
+        className="[width:7px] [height:7px] [border-radius:50%] [background:#b8965a] [flex-shrink:0] [animation:rivix-pulse_1.5s_infinite]" 
       />
       Only {stock} left — selling fast
     </div>
@@ -266,21 +168,10 @@ function VariantPills({ variants, selectedIdx, onSelect }) {
           <button
             key={v?.name}
             onClick={() => onSelect(i)}
-            className="cursor-pointer flex items-center gap-2.5 transition-all duration-200"
-            style={{
-              padding: "8px 16px 8px 10px",
-              borderRadius: 100,
-              border: active
+            className="cursor-pointer flex items-center gap-2.5 transition-all duration-200 [padding:8px_16px_8px_10px] [border-radius:100px] [font-size:13px] [font-family:inherit] [cursor:pointer]"
+            style={{ border: active
                 ? "1.5px solid #0d0d0d"
-                : "1.5px solid rgba(13,13,13,0.25)",
-              background: active ? "#0d0d0d" : "transparent",
-              color: active ? "#ffffff" : "#6b6560",
-              fontSize: 13,
-              fontFamily: "inherit",
-              transform: active ? "translateY(-1px)" : "none",
-              boxShadow: active ? "0 4px 16px rgba(13,13,13,0.18)" : "none",
-              cursor: "pointer",
-            }}
+                : "1.5px solid rgba(13,13,13,0.25)", background: active ? "#0d0d0d" : "transparent", color: active ? "#ffffff" : "#6b6560", transform: active ? "translateY(-1px)" : "none", boxShadow: active ? "0 4px 16px rgba(13,13,13,0.18)" : "none" }}
             onMouseEnter={(e) => {
               if (!active) {
                 e.currentTarget.style.borderColor = "#0d0d0d";
@@ -297,27 +188,14 @@ function VariantPills({ variants, selectedIdx, onSelect }) {
             }}
           >
             <div
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                background: v.color,
-                border: active
+              className="[width:18px] [height:18px] [border-radius:50%] [flex-shrink:0]" style={{ background: v.color, border: active
                   ? "1px solid rgba(255,255,255,0.25)"
-                  : "1px solid rgba(0,0,0,0.08)",
-                flexShrink: 0,
-                opacity: soldOut ? 0.45 : 1,
-              }}
+                  : "1px solid rgba(0,0,0,0.08)", opacity: soldOut ? 0.45 : 1 }}
             />
             {v.name}
             {soldOut && (
               <span
-                style={{
-                  fontSize: 9,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  opacity: 0.65,
-                }}
+                className="[font-size:9px] [letter-spacing:0.1em] [text-transform:uppercase] [opacity:0.65]" 
               >
                 Sold out
               </span>
@@ -340,26 +218,9 @@ function SizeGrid({ allSizes, availableSizes, selectedSize, onSelect }) {
           <button
             key={i}
             onClick={() => available && onSelect(s)}
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 8,
-              border: selected
+            className="[width:54px] [height:54px] [border-radius:8px] [font-size:13px] [font-family:inherit] [font-weight:400] [letter-spacing:0.05em] [transition:all_0.18s_ease]" style={{ border: selected
                 ? "1.5px solid #0d0d0d"
-                : "1.5px solid rgba(13,13,13,0.25)",
-              background: selected ? "#0d0d0d" : "transparent",
-              color: selected ? "#ffffff" : "#0d0d0d",
-              fontSize: 13,
-              fontFamily: "inherit",
-              fontWeight: 400,
-              letterSpacing: "0.05em",
-              opacity: available ? 1 : 0.28,
-              cursor: available ? "pointer" : "not-allowed",
-              textDecoration: available ? "none" : "line-through",
-              transition: "all 0.18s ease",
-              transform: selected ? "translateY(-1px)" : "none",
-              boxShadow: selected ? "0 4px 12px rgba(13,13,13,0.2)" : "none",
-            }}
+                : "1.5px solid rgba(13,13,13,0.25)", background: selected ? "#0d0d0d" : "transparent", color: selected ? "#ffffff" : "#0d0d0d", opacity: available ? 1 : 0.28, cursor: available ? "pointer" : "not-allowed", textDecoration: available ? "none" : "line-through", transform: selected ? "translateY(-1px)" : "none", boxShadow: selected ? "0 4px 12px rgba(13,13,13,0.2)" : "none" }}
             onMouseEnter={(e) => {
               if (available && !selected) {
                 e.currentTarget.style.borderColor = "#0d0d0d";
@@ -388,21 +249,11 @@ function Accordion({ title, children }) {
   const bodyRef = useRef(null);
 
   return (
-    <div style={{ borderBottom: "1px solid rgba(13,13,13,0.12)" }}>
+    <div className="[border-bottom:1px_solid_rgba(13,13,13,0.12)]" >
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between cursor-pointer"
-        style={{
-          padding: "16px 0",
-          fontSize: 11,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          background: "none",
-          border: "none",
-          color: "#0d0d0d",
-          fontFamily: "inherit",
-          cursor: "pointer",
-        }}
+        className="w-full flex items-center justify-between cursor-pointer [padding:16px_0] [font-size:11px] [letter-spacing:0.12em] [text-transform:uppercase] [background:none] [border:none] [color:#0d0d0d] [font-family:inherit] [cursor:pointer]"
+        
       >
         {title}
         <svg
@@ -412,11 +263,7 @@ function Accordion({ title, children }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          style={{
-            opacity: 0.5,
-            transition: "transform 0.25s ease",
-            transform: open ? "rotate(180deg)" : "none",
-          }}
+          className="[opacity:0.5] [transition:transform_0.25s_ease]" style={{ transform: open ? "rotate(180deg)" : "none" }}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -424,20 +271,10 @@ function Accordion({ title, children }) {
 
       <div
         ref={bodyRef}
-        style={{
-          maxHeight: open ? (bodyRef.current?.scrollHeight || 300) + "px" : 0,
-          overflow: "hidden",
-          transition: "max-height 0.35s ease",
-        }}
+        className="[overflow:hidden] [transition:max-height_0.35s_ease]" style={{ maxHeight: open ? (bodyRef.current?.scrollHeight || 300) + "px" : 0 }}
       >
         <div
-          style={{
-            paddingBottom: 18,
-            fontSize: 13,
-            lineHeight: 1.75,
-            color: "#6b6560",
-            fontWeight: 300,
-          }}
+          className="[padding-bottom:18px] [font-size:13px] [line-height:1.75] [color:#6b6560] [font-weight:300]" 
         >
           {children}
         </div>
@@ -449,24 +286,7 @@ function Accordion({ title, children }) {
 function Toast({ visible, message }) {
   return (
     <div
-      style={{
-        position: "fixed",
-        bottom: 32,
-        left: "50%",
-        transform: `translateX(-50%) translateY(${visible ? 0 : 80}px)`,
-        background: "#0d0d0d",
-        color: "#ffffff",
-        padding: "14px 28px",
-        borderRadius: 100,
-        fontSize: 12,
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
-        opacity: visible ? 1 : 0,
-        transition: "all 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-        zIndex: 999,
-        whiteSpace: "nowrap",
-        pointerEvents: "none",
-      }}
+      className="[position:fixed] [bottom:32px] [left:50%] [background:#0d0d0d] [color:#ffffff] [padding:14px_28px] [border-radius:100px] [font-size:12px] [letter-spacing:0.1em] [text-transform:uppercase] [transition:all_0.35s_cubic-bezier(0.34,1.56,0.64,1)] [z-index:999] [white-space:nowrap] [pointer-events:none]" style={{ transform: `translateX(-50%) translateY(${visible ? 0 : 80}px)`, opacity: visible ? 1 : 0 }}
     >
       {message}
     </div>
@@ -490,14 +310,9 @@ export default function ProductPage({ params }) {
       .then((products) => {
         const featuredProduct = products;
         setProduct(featuredProduct);
-        console.log("fetched product in promise", featuredProduct);
       })
       .catch(console.error);
   }, []);
-
-  useEffect(() => {
-    console.log("im fetched product", product);
-  }, [product]);
 
   const [variantIdx, setVariantIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -529,18 +344,61 @@ export default function ProductPage({ params }) {
     }, 180);
   };
 
+//check if product already in cart before
+const [isProductInCart, setIsProductInCart] = useState(false)
+const checkCart = async () => {
+  if (!product?._id || !variant?.id || !selectedSize) {
+    return false;
+  }
+
+  try {
+    const res = await fetch('/api/protected/user/cart/checkProduct', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        productId: product._id,
+        variantId: variant.id,
+        size: selectedSize
+      })
+    });
+
+    const r = await res.json();
+
+    setIsProductInCart(r.exists);
+
+    console.log('Checking product availability in cart:', r);
+
+    return r.exists;
+  } catch (error) {
+    console.error('Cart check failed:', error);
+    return false;
+  }
+};
+
+ useEffect(() => {
+  if (product?._id && variant?.id && selectedSize) {
+    checkCart();
+  } else {
+    setIsProductInCart(false);
+  }
+}, [product, variantIdx, selectedSize]);
+
   const handleAddToBag = async () => {
     if (soldOut) return;
-
+    
     if (!selectedSize) {
       setSizeShake(true);
       return;
     }
-
+    
     if (!isSignedIn) {
       setShowLoginRequired(true);
       return;
     }
+    await checkCart();
+    setIsProductInCart(true)
 
     const res = await fetch("/api/protected/user/cart/add", {
       method: "POST",
@@ -612,33 +470,19 @@ export default function ProductPage({ params }) {
       `}</style>
 
       <div
-        style={{
-          background: "#ffffff",
-          minHeight: "100vh",
-          fontFamily: "'DM Sans', sans-serif",
-          color: "#0d0d0d",
-        }}
+        className="[background:#ffffff] [min-height:100vh] [font-family:'DM_Sans',_sans-serif] [color:#0d0d0d]" 
       >
         {/* DELIVERY STRIP */}
         <div
-          className="w-full px-4 sm:px-6 xl:px-12 bg-background text-foreground hidden md:flex justify-center items-center"
-          style={{
-            background: "#0d0d0d",
-            color: "#ffffff",
-            padding: "12px 48px",
-            gap: 32,
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            flexWrap: "wrap",
-          }}
+          className="w-full px-4 sm:px-6 xl:px-12 bg-background text-foreground hidden md:flex justify-center items-center [background:#0d0d0d] [color:#ffffff] [padding:12px_48px] [gap:32px] [font-size:10px] [letter-spacing:0.14em] [text-transform:uppercase] [flex-wrap:wrap]"
+          
         >
           {[
             "Free shipping for all orders",
             "Cash on delivery available",
             "Easy 3-day returns",
           ].map((t, i) => (
-            <span key={i} style={{ opacity: 0.8 }}>
+            <span key={i} className="[opacity:0.8]" >
               {t}
             </span>
           ))}
@@ -648,17 +492,8 @@ export default function ProductPage({ params }) {
 
         {/* BREADCRUMB */}
         <div
-          className="w-full px-4 sm:px-6 xl:px-12"
-          style={{
-            padding: "16px 48px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 11,
-            color: "#6b6560",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
+          className="w-full px-4 sm:px-6 xl:px-12 [padding:16px_48px] [display:flex] [align-items:center] [gap:8px] [font-size:11px] [color:#6b6560] [letter-spacing:0.08em] [text-transform:uppercase]"
+          
         >
           Shop
           <svg
@@ -682,65 +517,30 @@ export default function ProductPage({ params }) {
           >
             <polyline points="9 18 15 12 9 6" />
           </svg>
-          <span style={{ color: "#0d0d0d" }}>{product?.name}</span>
+          <span className="[color:#0d0d0d]" >{product?.name}</span>
         </div>
 
         {/* MAIN LAYOUT */}
         <div
-          className="w-full !grid-cols-1 !px-4 sm:!px-6 xl:!grid-cols-[minmax(0,1fr)_480px] xl:!px-12"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 480px",
-            maxWidth: 1400,
-            margin: "0 auto",
-            padding: "0 48px 80px",
-          }}
+          className="w-full !grid-cols-1 !px-4 sm:!px-6 xl:!grid-cols-[minmax(0,1fr)_480px] xl:!px-12 [display:grid] [grid-template-columns:1fr_480px] [max-width:1400px] [margin:0_auto] [padding:0_48px_80px]"
+          
         >
           {/* GALLERY */}
           <div
-            className="!relative !h-auto !grid-cols-1 !grid-rows-[auto_minmax(0,1fr)] !gap-3 !p-0 xl:!sticky xl:!h-screen xl:!grid-cols-[72px_1fr] xl:!grid-rows-none xl:!gap-4 xl:!p-[32px_40px_32px_0]"
-            style={{
-              position: "sticky",
-              top: 0,
-              height: "100vh",
-              display: "grid",
-              gridTemplateColumns: "72px 1fr",
-              gap: 16,
-              padding: "32px 40px 32px 0",
-            }}
+            className="!relative !h-auto !grid-cols-1 !grid-rows-[auto_minmax(0,1fr)] !gap-3 !p-0 xl:!sticky xl:!h-screen xl:!grid-cols-[72px_1fr] xl:!grid-rows-none xl:!gap-4 xl:!p-[32px_40px_32px_0] [position:sticky] [top:0] [height:100vh] [display:grid] [grid-template-columns:72px_1fr] [gap:16px] [padding:32px_40px_32px_0]"
+            
           >
             <div
-              className="!flex-row !overflow-x-auto !overflow-y-hidden xl:!flex-col xl:!overflow-y-auto xl:!overflow-x-visible"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                overflowY: "auto",
-              }}
+              className="!flex-row !overflow-x-auto !overflow-y-hidden xl:!flex-col xl:!overflow-y-auto xl:!overflow-x-visible [display:flex] [flex-direction:column] [gap:10px] [overflow-y:auto]"
+              
             >
               {variant?.images?.map((_, i) => (
                 <div
                   key={i}
-                  style={{
-                    width: 64,
-                    height: 80,
-                    borderRadius: 6,
-                    border: "1.5px solid #0d0d0d",
-                    background: variant.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                  }}
+                  className="[width:64px] [height:80px] [border-radius:6px] [border:1.5px_solid_#0d0d0d] [display:flex] [align-items:center] [justify-content:center] [cursor:pointer] [flex-shrink:0]" style={{ background: variant.color }}
                 >
                   <span
-                    style={{
-                      fontFamily: "'Bebas Neue', sans-serif",
-                      fontSize: 8,
-                      letterSpacing: "0.1em",
-                      color: "rgba(13,13,13,0.35)",
-                    }}
+                    className="[font-family:'Bebas_Neue',_sans-serif] [font-size:8px] [letter-spacing:0.1em] [color:rgba(13,13,13,0.35)]" 
                   >
                     {variant.name}
                   </span>
@@ -759,33 +559,17 @@ export default function ProductPage({ params }) {
 
           {/* INFO */}
           <div
-            className="!border-l-0 !p-0 sm:!px-2 xl:!border-l xl:!p-[40px_0_40px_48px]"
-            style={{
-              padding: "40px 0 40px 48px",
-              borderLeft: "1px solid rgba(13,13,13,0.12)",
-            }}
+            className="!border-l-0 !p-0 sm:!px-2 xl:!border-l xl:!p-[40px_0_40px_48px] [padding:40px_0_40px_48px] [border-left:1px_solid_rgba(13,13,13,0.12)]"
+            
           >
             <div
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "#b8965a",
-                fontWeight: 500,
-                marginBottom: 10,
-              }}
+              className="[font-size:10px] [letter-spacing:0.2em] [text-transform:uppercase] [color:#b8965a] [font-weight:500] [margin-bottom:10px]" 
             >
               Rivix Essentials · SS25
             </div>
 
             <h1
-              style={{
-                fontFamily: "'Bebas Neue', sans-serif",
-                fontSize: 52,
-                letterSpacing: "0.04em",
-                lineHeight: 0.95,
-                marginBottom: 20,
-              }}
+              className="[font-family:'Bebas_Neue',_sans-serif] [font-size:52px] [letter-spacing:0.04em] [line-height:0.95] [margin-bottom:20px]" 
             >
               {product?.name?.split(" ").slice(0, -1).join(" ")}
               <br />
@@ -794,44 +578,23 @@ export default function ProductPage({ params }) {
 
             {/* Price */}
             <div
-              className="!flex-wrap sm:!flex-nowrap"
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 12,
-                marginBottom: 8,
-              }}
+              className="!flex-wrap sm:!flex-nowrap [display:flex] [align-items:baseline] [gap:12px] [margin-bottom:8px]"
+              
             >
               <span
-                style={{
-                  fontSize: 26,
-                  fontWeight: 300,
-                  letterSpacing: "-0.01em",
-                }}
+                className="[font-size:26px] [font-weight:300] [letter-spacing:-0.01em]" 
               >
                 ₹{variant?.price}
               </span>
 
               <span
-                style={{
-                  fontSize: 14,
-                  color: "#6b6560",
-                  textDecoration: "line-through",
-                }}
+                className="[font-size:14px] [color:#6b6560] [text-decoration:line-through]" 
               >
                 ₹1,199
               </span>
 
               <span
-                style={{
-                  fontSize: 11,
-                  background: "#b8965a",
-                  color: "#ffffff",
-                  padding: "2px 8px",
-                  borderRadius: 100,
-                  fontWeight: 500,
-                  letterSpacing: "0.05em",
-                }}
+                className="[font-size:11px] [background:#b8965a] [color:#ffffff] [padding:2px_8px] [border-radius:100px] [font-weight:500] [letter-spacing:0.05em]" 
               >
                 Save {Math.round((1 - variant?.price / 1199) * 100)}%
               </span>
@@ -840,26 +603,16 @@ export default function ProductPage({ params }) {
             {soldOut ? <SoldOutNotice /> : <StockBar stock={variant?.stock} />}
 
             <div
-              style={{
-                height: 1,
-                background: "rgba(13,13,13,0.12)",
-                margin: "0 0 24px",
-              }}
+              className="[height:1px] [background:rgba(13,13,13,0.12)] [margin:0_0_24px]" 
             />
 
             {/* Variants */}
             <div>
               <div
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "#6b6560",
-                  marginBottom: 14,
-                }}
+                className="[font-size:10px] [letter-spacing:0.2em] [text-transform:uppercase] [color:#6b6560] [margin-bottom:14px]" 
               >
                 Color —{" "}
-                <span style={{ color: "#0d0d0d", fontWeight: 500 }}>
+                <span className="[color:#0d0d0d] [font-weight:500]" >
                   {variant?.name}
                 </span>
               </div>
@@ -874,38 +627,18 @@ export default function ProductPage({ params }) {
             {/* Sizes */}
             <div>
               <div
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "#6b6560",
-                  marginBottom: 10,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
+                className="[font-size:10px] [letter-spacing:0.2em] [text-transform:uppercase] [color:#6b6560] [margin-bottom:10px] [display:flex] [justify-content:space-between] [align-items:center]" 
               >
                 <span>
                   Size —{" "}
-                  <span style={{ color: "#0d0d0d", fontWeight: 500 }}>
+                  <span className="[color:#0d0d0d] [font-weight:500]" >
                     {selectedSize || "Select size"}
                   </span>
                 </span>
 
                 <button
                   onClick={() => alert("Size guide coming soon!")}
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "#6b6560",
-                    textDecoration: "underline",
-                    textUnderlineOffset: 3,
-                    cursor: "pointer",
-                    background: "none",
-                    border: "none",
-                    fontFamily: "inherit",
-                  }}
+                  className="[font-size:11px] [letter-spacing:0.08em] [text-transform:uppercase] [color:#6b6560] [text-decoration:underline] [text-underline-offset:3px] [cursor:pointer] [background:none] [border:none] [font-family:inherit]" 
                 >
                   Size guide
                 </button>
@@ -925,69 +658,23 @@ export default function ProductPage({ params }) {
 
             {/* CTAs */}
             <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                marginBottom: 24,
-              }}
+              className="[display:flex] [flex-direction:column] [gap:10px] [margin-bottom:24px]" 
             >
               {soldOut ? (
                 <button
                   type="button"
                   disabled
                   aria-disabled="true"
-                  style={{
-                    width: "100%",
-                    padding: "18px 24px",
-                    borderRadius: 10,
-                    border: "1.5px solid rgba(13,13,13,0.15)",
-                    background: "rgba(13,13,13,0.06)",
-                    color: "rgba(13,13,13,0.45)",
-                    fontSize: 12,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    fontFamily: "inherit",
-                    fontWeight: 500,
-                    cursor: "not-allowed",
-                  }}
+                  className="[width:100%] [padding:18px_24px] [border-radius:10px] [border:1.5px_solid_rgba(13,13,13,0.15)] [background:rgba(13,13,13,0.06)] [color:rgba(13,13,13,0.45)] [font-size:12px] [letter-spacing:0.14em] [text-transform:uppercase] [font-family:inherit] [font-weight:500] [cursor:not-allowed]" 
                 >
                   Sold Out — Back Soon
                 </button>
               ) : (
                 <>
                   <button
+                    disabled={isProductInCart}
                     onClick={handleAddToBag}
-                    style={{
-                      width: "100%",
-                      padding: "18px 24px",
-                      borderRadius: 10,
-                      border: "1.5px solid #0d0d0d",
-                      background: "transparent",
-                      color: "#0d0d0d",
-                      fontSize: 12,
-                      letterSpacing: "0.14em",
-                      textTransform: "uppercase",
-                      fontFamily: "inherit",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                      transition: "all 0.22s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(13,13,13,0.06)";
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 6px 24px rgba(13,13,13,0.1)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
+                    className={`w-full px-6 py-4.5 rounded-[10px] border-[1.5px]  ${isProductInCart ? "bg-gray-500 border-gray-500 cursor-not-allowed" : 'bg-element border-[#0d0d0d] cursor-pointer'} text-foreground-inverse text-xs tracking-[0.14em] uppercase font-[inherit] font-medium flex items-center justify-center`}
                   >
                     <svg
                       width="16"
@@ -1001,53 +688,16 @@ export default function ProductPage({ params }) {
                       <line x1="3" y1="6" x2="21" y2="6" />
                       <path d="M16 10a4 4 0 0 1-8 0" />
                     </svg>
-                    Add to Bag
+                    {isProductInCart ? `Already in cart` : `Add to Bag`}
                   </button>
 
-                  <button
-                    onClick={handleBuyNow}
-                    style={{
-                      width: "100%",
-                      padding: "18px 24px",
-                      borderRadius: 10,
-                      border: "none",
-                      background: "#0d0d0d",
-                      color: "#ffffff",
-                      fontSize: 12,
-                      letterSpacing: "0.14em",
-                      textTransform: "uppercase",
-                      fontFamily: "inherit",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      transition: "all 0.22s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#1a1a1a";
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 8px 32px rgba(13,13,13,0.22)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "#0d0d0d";
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    Buy Now
-                  </button>
                 </>
               )}
             </div>
 
             {/* Trust badges */}
             <div
-              style={{
-                display: "flex",
-                border: "1px solid rgba(13,13,13,0.12)",
-                borderRadius: 10,
-                overflow: "hidden",
-                marginBottom: 24,
-              }}
+              className="[display:flex] [border:1px_solid_rgba(13,13,13,0.12)] [border-radius:10px] [overflow:hidden] [margin-bottom:24px]" 
             >
               {[
                 {
@@ -1077,24 +727,9 @@ export default function ProductPage({ params }) {
               ].map((item, i, arr) => (
                 <div
                   key={i}
-                  style={{
-                    flex: 1,
-                    padding: "12px 8px",
-                    textAlign: "center",
-                    fontSize: 10,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    color: "#6b6560",
-                    borderRight:
-                      i < arr.length - 1
+                  className="[flex:1] [padding:12px_8px] [text-align:center] [font-size:10px] [letter-spacing:0.06em] [text-transform:uppercase] [color:#6b6560] [display:flex] [flex-direction:column] [align-items:center] [gap:5px] [line-height:1.4]" style={{ borderRight: i < arr.length - 1
                         ? "1px solid rgba(13,13,13,0.12)"
-                        : "none",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 5,
-                    lineHeight: 1.4,
-                  }}
+                        : "none" }}
                 >
                   <svg
                     width="18"
@@ -1103,7 +738,7 @@ export default function ProductPage({ params }) {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
-                    style={{ opacity: 0.5 }}
+                    className="[opacity:0.5]" 
                   >
                     {item.icon}
                   </svg>
@@ -1114,13 +749,7 @@ export default function ProductPage({ params }) {
 
             {/* Description */}
             <p
-              style={{
-                fontSize: 13.5,
-                lineHeight: 1.75,
-                color: "#6b6560",
-                marginBottom: 24,
-                fontWeight: 300,
-              }}
+              className="[font-size:13.5px] [line-height:1.75] [color:#6b6560] [margin-bottom:24px] [font-weight:300]" 
             >
               {product?.description}
             </p>

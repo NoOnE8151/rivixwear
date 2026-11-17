@@ -1,42 +1,44 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/connections/connect db";
 import Address from "@/models/Address";
-import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
-    await connectDB();
-    const user = await currentUser();
+    const { userId } = await auth();
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
         {
           success: false,
           message: "Unauthorized",
         },
-        {
-          status: 401,
-        },
+        { status: 401 }
       );
     }
 
-    const savedAddresses = await Address.findOne({ userId: user.id });
+    await connectDB();
 
-    if (!savedAddresses) {
-      return NextResponse.json({
+    const addressDocument = await Address.findOne({ userId })
+      .select("addresses")
+      .lean();
+
+    return NextResponse.json(
+      {
         success: true,
-        savedAddresses: [],
-      });
-    }
-    return NextResponse.json({
-      success: true,
-      savedAddresses: savedAddresses.addresses,
-    });
+        savedAddresses: addressDocument?.addresses || [],
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    console.log(error);
-    return NextResponse.json({
-      success: false,
-      message: "internal server error",
-    });
+    console.error("GET SAVED ADDRESSES ERROR:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error.",
+      },
+      { status: 500 }
+    );
   }
 }

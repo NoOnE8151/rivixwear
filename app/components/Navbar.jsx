@@ -83,8 +83,8 @@ export default function Navbar() {
         flex items-center
         w-full md:h-20 h-14
         md:px-10 px-4 lg:px-12 gap-3
-        bg-[rgba(250,250,250,0.92)]
-        border-b border-black/6
+        bg-background
+        border-b border-black/6 md:border-none
         transition-shadow duration-300
         ${scrolled ? "shadow-[0_4px_24px_rgba(0,0,0,0.08)]" : ""}
         `}
@@ -138,7 +138,7 @@ export default function Navbar() {
 
           {/* Profile */}
           <Link
-            href={isSignedIn ? "/profile" : "/sign-up"}
+            href={isSignedIn ? "/my-account" : "/sign-up"}
             className="nav-link hidden md:inline-flex items-center justify-center"
             aria-label="Profile"
           >
